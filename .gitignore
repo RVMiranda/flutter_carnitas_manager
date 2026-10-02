@@ -46,3 +46,6 @@ app.*.map.json
 
 # Environment variables — NEVER commit credentials
 .env
+
+# Supabase CLI local state
+supabase/.temp/
