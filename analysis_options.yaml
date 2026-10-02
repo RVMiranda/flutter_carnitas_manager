@@ -1,1 +1,32 @@
 include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  plugins:
+    - custom_lint
+  exclude:
+    - "**/*.g.dart"          # Archivos generados por build_runner
+    - "**/*.freezed.dart"
+  errors:
+    invalid_annotation_target: ignore  # Suprime advertencia de riverpod_annotation
+
+linter:
+  rules:
+    # ── Buenas prácticas de Dart ─────────────────────────────────────────
+    avoid_dynamic_calls: true
+    avoid_print: true                  # Usar AppLogger en lugar de print()
+    avoid_redundant_argument_values: true
+    avoid_unused_constructor_parameters: true
+    cancel_subscriptions: true
+    close_sinks: true
+    prefer_final_locals: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    use_super_parameters: true
+
+    # ── Flutter específico ───────────────────────────────────────────────
+    sized_box_for_whitespace: true
+    use_colored_box: true
+
+    # ── Desactivados intencionalmente ────────────────────────────────────
+    public_member_api_docs: false      # No requerimos docs en todos los miembros
+    always_specify_types: false        # La inferencia de tipos mejora legibilidad

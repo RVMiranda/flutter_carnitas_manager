@@ -11,9 +11,6 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-Thumbs.db
-.idea/
-.vscode/
 
 # IntelliJ related
 *.iml
@@ -47,11 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Archivos específicos de Mac (CocoaPods)
-ios/Flutter/Flutter.podspec
-ios/Pods/
-macos/Pods/
-**/Pods/
+# Environment variables — NEVER commit credentials
+.env
 
-# Archivos específicos de Windows
-windows/flutter/ephemeral/
+# Supabase CLI local state
+supabase/.temp/

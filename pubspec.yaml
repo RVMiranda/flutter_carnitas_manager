@@ -1,19 +1,104 @@
-name: flutter_carnitas
-description: "A new Flutter project."
+name: exquisssita_manager
+description: "App administrativa para Taquería Exquisssita — Sistema POS con soporte offline-first."
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0+1
 
 environment:
-  sdk: ^3.9.2
+  sdk: ^3.12.2
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DEPENDENCIAS PRINCIPALES
+# ─────────────────────────────────────────────────────────────────────────────
 dependencies:
   flutter:
     sdk: flutter
 
+  # ── Estado e Inyección de Dependencias ──────────────────────────────────────
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # ── Backend remoto (Supabase) ────────────────────────────────────────────────
+  supabase_flutter: ^2.9.1
+
+  # ── Base de datos local (Offline-First) ──────────────────────────────────────
+  drift: ^2.26.1
+  drift_flutter: ^0.2.4          # SQLite multiplataforma sin configuración manual
+
+  # ── Routing ─────────────────────────────────────────────────────────────────
+  go_router: ^15.1.2
+
+  # ── Utilidades ───────────────────────────────────────────────────────────────
+  uuid: ^4.5.1                   # Generación de UUID v4 en cliente
+  connectivity_plus: ^6.1.4      # Detección de conectividad de red
+  flutter_dotenv: ^5.2.1         # Carga de variables de entorno desde .env
+  intl: ^0.20.2                  # Formateo de fechas y moneda
+
+  # ── UI & Tipografía ───────────────────────────────────────────────────────────
+  google_fonts: ^6.2.1           # Outfit + Fraunces (se usan como assets bundleados)
+  shimmer: ^3.0.0                # Skeletons de carga
+  fl_chart: ^1.0.0               # Gráficas de ventas
+
+  # ── Funcionalidades específicas ───────────────────────────────────────────────
+  mobile_scanner: ^7.0.1         # Escáner QR (Android + iOS; deshabilitado en web)
+  pdf: ^3.11.1                   # Generación de tickets PDF
+  printing: ^5.14.2              # Impresión y vista previa de PDF
+  flutter_secure_storage: ^9.2.4 # Almacenamiento seguro de tokens
+
+  # ── Manejo de assets de imagen ────────────────────────────────────────────────
+  image_picker: ^1.1.2           # Selección de imágenes para productos/promociones
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEPENDENCIAS DE DESARROLLO
+# ─────────────────────────────────────────────────────────────────────────────
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
 
+  flutter_lints: ^6.0.0
+
+  # ── Generación de código ──────────────────────────────────────────────────────
+  build_runner: ^2.4.15
+  drift_dev: ^2.26.1             # Generador de código para Drift (tablas, DAOs)
+  riverpod_generator: ^2.6.1     # Generador de providers para Riverpod
+
+  # ── Lint adicional para Riverpod ──────────────────────────────────────────────
+  custom_lint: ^0.7.5
+  riverpod_lint: ^2.6.1
+
+  # ── Testing ───────────────────────────────────────────────────────────────────
+  mocktail: ^1.0.4               # Mocking sin build_runner
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONFIGURACIÓN DE FLUTTER
+# ─────────────────────────────────────────────────────────────────────────────
 flutter:
   uses-material-design: true
+
+  # ── Fuentes bundleadas (sin dependencia de CDN) ───────────────────────────────
+  fonts:
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Outfit-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Outfit-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Outfit-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Outfit-Bold.ttf
+          weight: 700
+
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Fraunces-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Fraunces-Bold.ttf
+          weight: 700
+
+  # ── Assets ───────────────────────────────────────────────────────────────────
+  assets:
+    - assets/fonts/
+    - .env
