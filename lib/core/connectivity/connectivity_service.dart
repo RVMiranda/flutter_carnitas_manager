@@ -70,6 +70,12 @@ class ConnectivityService {
   /// Verifica el estado de conectividad de forma síncrona (caché).
   bool get isOnline => _current == ConnectivityStatus.online;
 
+  void setStatus(ConnectivityStatus status) {
+    if (_current == status || _controller.isClosed) return;
+    _current = status;
+    _controller.add(status);
+  }
+
   void dispose() {
     _controller.close();
   }

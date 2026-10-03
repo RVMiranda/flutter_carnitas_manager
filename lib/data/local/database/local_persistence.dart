@@ -51,12 +51,27 @@ class LocalPersistence {
     });
   }
 
-  Future<List<SyncQueueTableData>> pendingSyncBatch({int limit = 50}) {
-    return (_db.select(_db.syncQueueTable)
-          ..where((t) => t.status.equals(SyncStatus.pending))
-          ..orderBy([(t) => OrderingTerm(expression: t.createdAt)])
-          ..limit(limit))
-        .get();
+  Future<List<SyncQueueTableData>> pendingSyncBatch({
+    int limit = 50,
+    int? now,
+  }) async {
+    final rows =
+        await (_db.select(_db.syncQueueTable)
+              ..where((t) => t.status.equals(SyncStatus.pending))
+              ..orderBy([(t) => OrderingTerm(expression: t.createdAt)])
+              ..limit(limit))
+            .get();
+    if (now == null) return rows;
+    return rows.where((row) {
+      if (row.lastAttemptAt == null) return true;
+      final delay = _retryDelayMs(row.attempts);
+      return row.lastAttemptAt! + delay <= now;
+    }).toList();
+  }
+
+  static int _retryDelayMs(int attempts) {
+    final exponent = attempts.clamp(0, 6);
+    return 1000 * (1 << exponent);
   }
 
   Future<void> markSyncProcessing(String id, int now) =>

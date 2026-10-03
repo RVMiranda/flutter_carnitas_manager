@@ -39,10 +39,22 @@ class SyncWorker {
       return;
     }
     _isSyncing = true;
+    _connectivity.setStatus(ConnectivityStatus.syncing);
     try {
-      for (final operation in await _local.pendingSyncBatch()) {
+      for (final operation in await _local.pendingSyncBatch(
+        now: DateTime.now().millisecondsSinceEpoch,
+      )) {
         await _process(operation);
       }
+      _connectivity.setStatus(ConnectivityStatus.online);
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        'Sincronización interrumpida',
+        tag: 'Sync',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      _connectivity.setStatus(ConnectivityStatus.syncError);
     } finally {
       _isSyncing = false;
     }
