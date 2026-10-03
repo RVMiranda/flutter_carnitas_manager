@@ -8,6 +8,7 @@ import 'package:exquisssita_manager/features/auth/presentation/view_models/auth_
 import 'package:exquisssita_manager/shared/navigation/main_shell.dart';
 import 'package:exquisssita_manager/features/loyalty/presentation/qr_scanner_view.dart';
 import 'package:exquisssita_manager/features/promotions/presentation/promotions_view.dart';
+import 'package:exquisssita_manager/features/cash_register/presentation/cash_register_view.dart';
 
 part 'app_router.g.dart';
 
@@ -86,6 +87,11 @@ GoRouter appRouter(Ref ref) {
             builder: (context, state) => const PromotionsView(),
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.cashRegister,
+        name: 'cash_register',
+        builder: (context, state) => const CashRegisterView(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
