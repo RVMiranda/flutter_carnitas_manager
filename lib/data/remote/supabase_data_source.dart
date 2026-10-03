@@ -26,8 +26,9 @@ class SupabaseDataSource {
     required Map<String, dynamic> payload,
     required String entityId,
   }) async {
-    if (entity == 'registrar_pago') {
-      await _client.rpc('registrar_pago', params: payload);
+    if (entity == 'registrar_pago' ||
+        entity == 'registrar_movimiento_inventario') {
+      await _client.rpc(entity, params: payload);
       return;
     }
     if (!_allowedTables.contains(entity)) {
