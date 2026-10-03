@@ -22,15 +22,20 @@ class PaymentPreview {
     required this.orderId,
     required this.lines,
     required this.paidCents,
+    this.awaitingConfirmationCents = 0,
+    this.requiresReview = false,
   });
 
   final String orderId;
   final List<PaymentPreviewLine> lines;
   final int paidCents;
+  final int awaitingConfirmationCents;
+  final bool requiresReview;
 
   int get totalCents => lines.fold(0, (sum, line) => sum + line.totalCents);
   int get pendingCents => totalCents - paidCents;
-  bool get canPay => pendingCents > 0;
+  bool get canPay =>
+      pendingCents > 0 && awaitingConfirmationCents == 0 && !requiresReview;
 }
 
 abstract interface class PaymentPreviewRepository {

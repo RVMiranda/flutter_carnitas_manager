@@ -62,7 +62,7 @@ class OrdenesTable extends Table {
   Set<Column> get primaryKey => {id};
   @override
   List<String> get customConstraints => [
-    "CHECK (tipo_servicio IN ('Mesa', 'Para llevar'))",
+    "CHECK (tipo_servicio IN ('Mesa', 'Para llevar', 'Domicilio'))",
   ];
 }
 
@@ -139,7 +139,7 @@ class MovimientosInventarioTable extends Table {
   @override
   Set<Column> get primaryKey => {id};
   @override
-  List<String> get customConstraints => ['CHECK (cantidad > 0)'];
+  List<String> get customConstraints => ['CHECK (cantidad <> 0)'];
 }
 
 @TableIndex(name: 'visitas_usuario_fecha', columns: {#usuarioId, #fecha})

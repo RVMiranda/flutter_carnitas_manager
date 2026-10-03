@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 
 @TableIndex(name: 'sync_queue_status_created', columns: {#status, #createdAt})
-
 /// Tabla de cola de sincronización offline-first.
 ///
 /// Toda operación realizada sin conexión se registra aquí.

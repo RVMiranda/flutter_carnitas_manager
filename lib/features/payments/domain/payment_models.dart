@@ -148,6 +148,11 @@ class PaymentAllocationCalculator {
     PaymentMethod method,
     List<PaymentAllocation> allocations,
   ) {
+    if (preview.awaitingConfirmationCents > 0 || preview.requiresReview) {
+      throw const PaymentValidationException(
+        'El pago anterior está pendiente de confirmación o revisión.',
+      );
+    }
     final amount = allocations.fold(0, (sum, item) => sum + item.amountCents);
     if (allocations.isEmpty || amount <= 0 || amount > preview.pendingCents) {
       throw const PaymentValidationException('Asignaciones de pago inválidas.');

@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:exquisssita_manager/app/router/app_router.dart';
 import 'package:exquisssita_manager/app/theme/app_theme.dart';
+import 'package:exquisssita_manager/app/theme/exquisssita_tokens.dart';
 import 'package:exquisssita_manager/data/sync/sync_worker.dart';
 import 'package:exquisssita_manager/app/theme/theme_controller.dart';
+import 'package:exquisssita_manager/shared/widgets/sync_status_banner.dart';
 
 /// Widget raíz de la aplicación Exquisssita Manager.
 ///
@@ -30,10 +32,21 @@ class ExquisssitaApp extends ConsumerWidget {
       // ── Tema ───────────────────────────────────────────────────────────
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
+      highContrastTheme: AppTheme.highContrastLightTheme,
+      highContrastDarkTheme: AppTheme.highContrastDarkTheme,
       themeMode: themeMode,
+      themeAnimationDuration: exquisssitaPlatformReducedMotion
+          ? Duration.zero
+          : const ExquisssitaMetrics().transition,
 
       // ── Router ─────────────────────────────────────────────────────────
       routerConfig: router,
+      builder: (context, child) => Column(
+        children: [
+          SyncStatusBanner(navigatorKey: router.routerDelegate.navigatorKey),
+          Expanded(child: child ?? const SizedBox.shrink()),
+        ],
+      ),
 
       // ── Localización ────────────────────────────────────────────────────
       locale: const Locale('es', 'MX'),

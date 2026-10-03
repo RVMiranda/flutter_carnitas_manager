@@ -1,51 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:exquisssita_manager/app/theme/app_colors.dart';
-import 'package:exquisssita_manager/app/theme/app_text_styles.dart';
+import 'exquisssita_tokens.dart';
 
 /// Sistema de tema completo de Exquisssita Manager.
 ///
 /// Soporta modo claro y oscuro. Los valores son coherentes con
 /// design_example/index.css y DESIGN_PROMPT.md.
 abstract final class AppTheme {
+  static const _metrics = ExquisssitaMetrics();
+  static ThemeData get highContrastLightTheme => _highContrast(lightTheme);
+  static ThemeData get highContrastDarkTheme => _highContrast(darkTheme);
+  static ThemeData _highContrast(ThemeData theme) => theme.copyWith(
+    extensions: [
+      ExquisssitaTokens.forBrightness(theme.brightness, highContrast: true),
+    ],
+  );
   // ── Constantes de forma ───────────────────────────────────────────────────
 
   /// Radio estándar para tarjetas y contenedores
-  static const double radiusCard = 18.0;
+  static final double radiusCard = _metrics.radiusCard;
 
   /// Radio para botones
-  static const double radiusButton = 14.0;
+  static final double radiusButton = _metrics.radiusButton;
 
   /// Radio para chips y badges
-  static const double radiusChip = 24.0;
+  static final double radiusChip = _metrics.radiusChip;
 
   /// Radio para el nav bar pill
-  static const double radiusNav = 28.0;
+  static final double radiusNav = _metrics.radiusNav;
 
   /// Radio grande para bottom sheets
-  static const double radiusBottomSheet = 24.0;
+  static final double radiusBottomSheet = _metrics.radiusSheet;
 
   // ── Espaciado ────────────────────────────────────────────────────────────
 
-  static const double spacingXs = 4.0;
-  static const double spacingS = 8.0;
-  static const double spacingM = 12.0;
-  static const double spacingL = 16.0;
-  static const double spacingXl = 20.0;
-  static const double spacingXxl = 24.0;
+  static final double spacingXs = _metrics.spaceXs;
+  static final double spacingS = _metrics.spaceS;
+  static final double spacingM = _metrics.spaceM;
+  static final double spacingL = _metrics.spaceL;
+  static final double spacingXl = _metrics.spaceXl;
+  static final double spacingXxl = _metrics.spaceXxl;
 
   // ── Elevaciones ───────────────────────────────────────────────────────────
 
-  static const double elevationCard = 2.0;
-  static const double elevationNav = 8.0;
-  static const double elevationFab = 6.0;
+  static final double elevationCard = _metrics.elevationCard;
+  static final double elevationNav = _metrics.elevationNav;
+  static final double elevationFab = _metrics.elevationFab;
 
   // ─────────────────────────────────────────────────────────────────────────
   // TEMA CLARO
   // ─────────────────────────────────────────────────────────────────────────
 
   static ThemeData get lightTheme {
-    const colorScheme = ColorScheme(
+    final tokens = ExquisssitaTokens.forBrightness(Brightness.light);
+    final colorScheme = ColorScheme(
       brightness: Brightness.light,
       primary: AppColors.lightPrimary,
       onPrimary: AppColors.lightPrimaryForeground,
@@ -65,8 +74,8 @@ abstract final class AppTheme {
       surfaceContainerHighest: AppColors.lightMuted,
       outline: AppColors.lightBorder,
       outlineVariant: AppColors.lightBorder,
-      shadow: Color(0x0F000000),
-      scrim: Color(0x66000000),
+      shadow: tokens.shadow,
+      scrim: tokens.scrim,
       inverseSurface: AppColors.lightForeground,
       onInverseSurface: AppColors.lightCard,
       inversePrimary: AppColors.lightPrimary,
@@ -89,7 +98,8 @@ abstract final class AppTheme {
   // ─────────────────────────────────────────────────────────────────────────
 
   static ThemeData get darkTheme {
-    const colorScheme = ColorScheme(
+    final tokens = ExquisssitaTokens.forBrightness(Brightness.dark);
+    final colorScheme = ColorScheme(
       brightness: Brightness.dark,
       primary: AppColors.darkPrimary,
       onPrimary: AppColors.darkPrimaryForeground,
@@ -109,8 +119,8 @@ abstract final class AppTheme {
       surfaceContainerHighest: AppColors.darkMuted,
       outline: AppColors.darkBorder,
       outlineVariant: AppColors.darkBorder,
-      shadow: Color(0x3F000000),
-      scrim: Color(0x80000000),
+      shadow: tokens.shadow,
+      scrim: tokens.scrim,
       inverseSurface: AppColors.darkForeground,
       onInverseSurface: AppColors.darkCard,
       inversePrimary: AppColors.darkPrimary,
@@ -142,38 +152,20 @@ abstract final class AppTheme {
     required Brightness brightness,
     required SystemUiOverlayStyle systemUiStyle,
   }) {
-    const fontFamily = 'Outfit';
+    final tokens = ExquisssitaTokens.forBrightness(brightness);
 
     return ThemeData(
       useMaterial3: true,
+      extensions: [tokens],
+      splashFactory: NoSplash.splashFactory,
+      splashColor: tokens.transparent,
+      highlightColor: tokens.transparent,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: scaffoldBg,
-      fontFamily: fontFamily,
+      fontFamily: tokens.body.fontFamily,
 
       // ── Tipografía ──────────────────────────────────────────────────────
-      textTheme: TextTheme(
-        displayLarge: AppTextStyles.displayLarge.copyWith(color: foreground),
-        displayMedium: AppTextStyles.displayMedium.copyWith(color: foreground),
-        displaySmall: AppTextStyles.displaySmall.copyWith(color: foreground),
-        headlineLarge: AppTextStyles.displayMedium.copyWith(color: foreground),
-        headlineMedium: AppTextStyles.displaySmall.copyWith(color: foreground),
-        headlineSmall: AppTextStyles.bodyLarge.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w600,
-        ),
-        titleLarge: AppTextStyles.labelLarge.copyWith(
-          color: foreground,
-          fontSize: 16,
-        ),
-        titleMedium: AppTextStyles.labelLarge.copyWith(color: foreground),
-        titleSmall: AppTextStyles.labelMedium.copyWith(color: foreground),
-        bodyLarge: AppTextStyles.bodyLarge.copyWith(color: foreground),
-        bodyMedium: AppTextStyles.bodyMedium.copyWith(color: foreground),
-        bodySmall: AppTextStyles.bodySmall.copyWith(color: mutedFg),
-        labelLarge: AppTextStyles.labelLarge.copyWith(color: foreground),
-        labelMedium: AppTextStyles.labelMedium.copyWith(color: mutedFg),
-        labelSmall: AppTextStyles.labelSmall.copyWith(color: mutedFg),
-      ),
+      textTheme: tokens.text,
 
       // ── AppBar ──────────────────────────────────────────────────────────
       appBarTheme: AppBarTheme(
@@ -181,7 +173,7 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        titleTextStyle: AppTextStyles.displaySmall.copyWith(color: foreground),
+        titleTextStyle: tokens.text.displaySmall,
         iconTheme: IconThemeData(color: foreground),
         systemOverlayStyle: systemUiStyle,
       ),
@@ -200,23 +192,26 @@ abstract final class AppTheme {
       // ── Botones elevados (primarios) ──────────────────────────────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
+          backgroundColor: tokens.actionBackground,
+          foregroundColor: tokens.actionForeground,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+          padding: EdgeInsets.symmetric(
+            vertical: _metrics.spaceM,
+            horizontal: _metrics.spaceXxl,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusButton),
           ),
-          textStyle: AppTextStyles.buttonLarge,
-          minimumSize: const Size(double.infinity, 48),
+          textStyle: tokens.button,
+          minimumSize: Size(double.infinity, _metrics.target),
         ),
       ),
 
       // ── Botones de texto ──────────────────────────────────────────────────
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: colorScheme.primary,
-          textStyle: AppTextStyles.buttonMedium,
+          foregroundColor: tokens.foreground,
+          textStyle: tokens.label,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusButton),
           ),
@@ -226,63 +221,79 @@ abstract final class AppTheme {
       // ── Botones outlined ─────────────────────────────────────────────────
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: colorScheme.primary,
-          side: BorderSide(color: border, width: 1.5),
+          foregroundColor: tokens.foreground,
+          side: BorderSide(color: border, width: _metrics.lineWidth),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusButton),
           ),
-          textStyle: AppTextStyles.buttonMedium,
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+          textStyle: tokens.label,
+          padding: EdgeInsets.symmetric(
+            vertical: _metrics.spaceM,
+            horizontal: _metrics.spaceXl,
+          ),
         ),
       ),
 
       // ── Campos de texto ──────────────────────────────────────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: brightness == Brightness.light
-            ? AppColors.lightSecondary
-            : AppColors.darkSecondary,
+        fillColor: tokens.secondary,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusButton),
-          borderSide: BorderSide(color: border, width: 1.5),
+          borderSide: BorderSide(color: border, width: _metrics.lineWidth),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusButton),
-          borderSide: BorderSide(color: border, width: 1.5),
+          borderSide: BorderSide(color: border, width: _metrics.lineWidth),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusButton),
-          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+          borderSide: BorderSide(
+            color: tokens.focus,
+            width: _metrics.focusWidth,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusButton),
-          borderSide: BorderSide(color: colorScheme.error, width: 1.5),
+          borderSide: BorderSide(
+            color: colorScheme.error,
+            width: _metrics.lineWidth,
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: _metrics.spaceL,
+          vertical: _metrics.spaceM,
         ),
-        hintStyle: AppTextStyles.bodyMedium.copyWith(color: mutedFg),
-        labelStyle: AppTextStyles.labelMedium.copyWith(color: mutedFg),
+        hintStyle: tokens.body,
+        labelStyle: tokens.label,
+        floatingLabelStyle: tokens.label,
+        errorStyle: tokens.body,
       ),
 
       // ── Divisores ────────────────────────────────────────────────────────
-      dividerTheme: DividerThemeData(color: border, thickness: 1, space: 0),
+      dividerTheme: DividerThemeData(
+        color: border,
+        thickness: _metrics.hairline,
+        space: 0,
+      ),
 
       // ── Chips ────────────────────────────────────────────────────────────
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusChip),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        labelStyle: AppTextStyles.labelMedium,
+        padding: EdgeInsets.symmetric(
+          horizontal: _metrics.spaceM,
+          vertical: _metrics.spaceS,
+        ),
+        labelStyle: tokens.label,
       ),
 
       // ── Bottom sheet ──────────────────────────────────────────────────────
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: cardBg,
         surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(radiusBottomSheet),
           ),
@@ -292,19 +303,22 @@ abstract final class AppTheme {
 
       // ── FAB ───────────────────────────────────────────────────────────────
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
+        backgroundColor: tokens.actionBackground,
+        foregroundColor: tokens.actionForeground,
         elevation: elevationFab,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_metrics.radiusCard),
+        ),
       ),
 
       // ── Snackbars ─────────────────────────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
-          color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_metrics.radiusSmall),
         ),
+        backgroundColor: tokens.foreground,
+        contentTextStyle: tokens.body.copyWith(color: tokens.card),
       ),
 
       // ── Progress indicators ────────────────────────────────────────────
@@ -312,12 +326,15 @@ abstract final class AppTheme {
         color: colorScheme.primary,
         circularTrackColor: border,
         linearTrackColor: border,
-        borderRadius: const BorderRadius.all(Radius.circular(4)),
+        borderRadius: BorderRadius.all(Radius.circular(_metrics.spaceXs)),
       ),
 
       // ── ListTile ──────────────────────────────────────────────────────────
       listTileTheme: ListTileThemeData(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: _metrics.spaceL,
+          vertical: _metrics.spaceXs,
+        ),
         tileColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusCard),

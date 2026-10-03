@@ -118,6 +118,14 @@ abstract final class AppTextStyles {
 
   // ── Botones ───────────────────────────────────────────────────────────────
 
+  /// Large bold label permits the original red/white AA large-text pair.
+  static const accessibleAction = TextStyle(
+    fontFamily: _sans,
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.1,
+  );
+
   static const buttonLarge = TextStyle(
     fontFamily: _sans,
     fontSize: 15,

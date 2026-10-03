@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:exquisssita_manager/app/router/app_router.dart';
-import 'package:exquisssita_manager/app/theme/app_text_styles.dart';
-import 'package:exquisssita_manager/app/theme/app_theme.dart';
+import 'package:flutter/foundation.dart';
+import 'package:exquisssita_manager/app/theme/exquisssita_tokens.dart';
+import 'package:exquisssita_manager/shared/widgets/exquisssita_components.dart';
 import 'package:exquisssita_manager/features/auth/presentation/view_models/auth_vm.dart';
 
 /// Bottom sheet de opciones secundarias (configuración, gráficas, corte de caja, etc.)
@@ -15,11 +16,11 @@ class SettingsBottomSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final t = context.exq;
 
     final options = [
       _SettingsOption(
-        icon: '📊',
+        icon: Icons.bar_chart_outlined,
         label: 'Gráficas de ventas',
         subtitle: 'Resumen del día y semana',
         onTap: () {
@@ -28,7 +29,7 @@ class SettingsBottomSheet extends ConsumerWidget {
         },
       ),
       _SettingsOption(
-        icon: '🧾',
+        icon: Icons.receipt_long_outlined,
         label: 'Cierre de caja',
         subtitle: 'Corte al final del turno',
         onTap: () {
@@ -37,7 +38,7 @@ class SettingsBottomSheet extends ConsumerWidget {
         },
       ),
       _SettingsOption(
-        icon: '⚙️',
+        icon: Icons.settings_outlined,
         label: 'Configuración',
         subtitle: 'Preferencias del sistema',
         onTap: () {
@@ -46,13 +47,13 @@ class SettingsBottomSheet extends ConsumerWidget {
         },
       ),
       _SettingsOption(
-        icon: '🔔',
+        icon: Icons.notifications_outlined,
         label: 'Notificaciones',
         subtitle: 'Alertas y avisos',
         onTap: () => Navigator.of(context).pop(),
       ),
       _SettingsOption(
-        icon: '🚪',
+        icon: Icons.logout_outlined,
         label: 'Cerrar sesión',
         subtitle: 'Salir de la cuenta actual',
         isDestructive: true,
@@ -63,50 +64,30 @@ class SettingsBottomSheet extends ConsumerWidget {
       ),
     ];
 
-    return Container(
-      margin: const EdgeInsets.only(top: 48),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.paddingOf(context).bottom + AppTheme.spacingL,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppTheme.radiusBottomSheet),
+    if (kDebugMode) {
+      options.insert(
+        0,
+        _SettingsOption(
+          icon: Icons.palette_outlined,
+          label: 'Galería Exquisssita',
+          subtitle: 'Componentes y accesibilidad',
+          onTap: () {
+            Navigator.of(context).pop();
+            context.push(AppRoutes.designGallery);
+          },
         ),
-      ),
+      );
+    }
+    return ExquisssitaSheet(
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── Handle ────────────────────────────────────────────────────────
-          Container(
-            margin: const EdgeInsets.only(top: AppTheme.spacingM),
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.outline.withAlpha(80),
-              borderRadius: BorderRadius.circular(2),
-            ),
+          Semantics(
+            header: true,
+            child: Text('Más opciones', style: t.heading),
           ),
-
-          const SizedBox(height: AppTheme.spacingL),
-
-          // ── Título ────────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingXl),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Más opciones',
-                style: AppTextStyles.displaySmall.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: AppTheme.spacingM),
-
-          // ── Opciones ──────────────────────────────────────────────────────
+          SizedBox(height: t.metrics.spaceL),
           ...options.map((opt) => _SettingsOptionTile(option: opt)),
         ],
       ),
@@ -122,10 +103,8 @@ class _SettingsOption {
     required this.onTap,
     this.isDestructive = false,
   });
-
-  final String icon;
-  final String label;
-  final String subtitle;
+  final IconData icon;
+  final String label, subtitle;
   final VoidCallback onTap;
   final bool isDestructive;
 }
@@ -133,61 +112,32 @@ class _SettingsOption {
 class _SettingsOptionTile extends StatelessWidget {
   const _SettingsOptionTile({required this.option});
   final _SettingsOption option;
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final labelColor = option.isDestructive
-        ? theme.colorScheme.error
-        : theme.colorScheme.onSurface;
-
-    return InkWell(
-      onTap: option.onTap,
+    final t = context.exq;
+    final m = t.metrics;
+    return ExquisssitaPressable(
+      label: '${option.label}. ${option.subtitle}',
+      onPressed: option.onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacingXl,
-          vertical: AppTheme.spacingM,
-        ),
+        padding: EdgeInsets.symmetric(vertical: m.spaceM),
         child: Row(
           children: [
-            // ── Ícono ──────────────────────────────────────────────────────
-            SizedBox(
-              width: 32,
-              child: Text(
-                option.icon,
-                style: const TextStyle(fontSize: 20),
-                textAlign: TextAlign.center,
-              ),
-            ),
-
-            const SizedBox(width: AppTheme.spacingM),
-
-            // ── Labels ─────────────────────────────────────────────────────
+            Icon(option.icon, color: t.foreground, size: m.icon),
+            SizedBox(width: m.spaceM),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    option.label,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: labelColor,
-                    ),
-                  ),
-                  Text(
-                    option.subtitle,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha(100),
-                    ),
-                  ),
+                  Text(option.label, style: t.label),
+                  Text(option.subtitle, style: t.caption),
                 ],
               ),
             ),
-
             Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: theme.colorScheme.outline,
+              Icons.chevron_right_outlined,
+              color: t.foreground,
+              size: m.iconSmall,
             ),
           ],
         ),
