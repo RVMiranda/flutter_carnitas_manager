@@ -7,6 +7,7 @@ class ClientesTable extends Table {
   String get tableName => 'clientes';
   TextColumn get id => text()();
   TextColumn get userId => text().nullable()();
+  TextColumn get qrTokenHash => text().nullable()();
   TextColumn get nombre => text()();
   TextColumn get telefono => text().nullable()();
   IntColumn get visitasTotales => integer().withDefault(const Constant(0))();
@@ -118,6 +119,7 @@ class VisitasClientesTable extends Table {
   String get tableName => 'visitas_clientes';
   TextColumn get id => text()();
   TextColumn get clienteId => text()();
+  TextColumn get usuarioId => text().nullable()();
   TextColumn get fecha => text()();
   IntColumn get puntosOtorgados => integer().withDefault(const Constant(10))();
   TextColumn get registradoPor => text().nullable()();

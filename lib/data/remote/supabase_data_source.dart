@@ -4,6 +4,14 @@ class SupabaseDataSource {
   SupabaseDataSource(this._client);
   final SupabaseClient _client;
 
+  Future<Map<String, dynamic>> registerVisitQr(String token) async {
+    final result = await _client.rpc(
+      'registrar_visita_qr',
+      params: {'p_qr_token': token},
+    );
+    return Map<String, dynamic>.from(result as Map);
+  }
+
   static const _allowedTables = {
     'clientes',
     'empleados',

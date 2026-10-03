@@ -1105,6 +1105,17 @@ class $ClientesTableTable extends ClientesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _qrTokenHashMeta = const VerificationMeta(
+    'qrTokenHash',
+  );
+  @override
+  late final GeneratedColumn<String> qrTokenHash = GeneratedColumn<String>(
+    'qr_token_hash',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _nombreMeta = const VerificationMeta('nombre');
   @override
   late final GeneratedColumn<String> nombre = GeneratedColumn<String>(
@@ -1186,6 +1197,7 @@ class $ClientesTableTable extends ClientesTable
   List<GeneratedColumn> get $columns => [
     id,
     userId,
+    qrTokenHash,
     nombre,
     telefono,
     visitasTotales,
@@ -1215,6 +1227,15 @@ class $ClientesTableTable extends ClientesTable
       context.handle(
         _userIdMeta,
         userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    }
+    if (data.containsKey('qr_token_hash')) {
+      context.handle(
+        _qrTokenHashMeta,
+        qrTokenHash.isAcceptableOrUnknown(
+          data['qr_token_hash']!,
+          _qrTokenHashMeta,
+        ),
       );
     }
     if (data.containsKey('nombre')) {
@@ -1293,6 +1314,10 @@ class $ClientesTableTable extends ClientesTable
         DriftSqlType.string,
         data['${effectivePrefix}user_id'],
       ),
+      qrTokenHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}qr_token_hash'],
+      ),
       nombre: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}nombre'],
@@ -1334,6 +1359,7 @@ class ClientesTableData extends DataClass
     implements Insertable<ClientesTableData> {
   final String id;
   final String? userId;
+  final String? qrTokenHash;
   final String nombre;
   final String? telefono;
   final int visitasTotales;
@@ -1344,6 +1370,7 @@ class ClientesTableData extends DataClass
   const ClientesTableData({
     required this.id,
     this.userId,
+    this.qrTokenHash,
     required this.nombre,
     this.telefono,
     required this.visitasTotales,
@@ -1358,6 +1385,9 @@ class ClientesTableData extends DataClass
     map['id'] = Variable<String>(id);
     if (!nullToAbsent || userId != null) {
       map['user_id'] = Variable<String>(userId);
+    }
+    if (!nullToAbsent || qrTokenHash != null) {
+      map['qr_token_hash'] = Variable<String>(qrTokenHash);
     }
     map['nombre'] = Variable<String>(nombre);
     if (!nullToAbsent || telefono != null) {
@@ -1377,6 +1407,9 @@ class ClientesTableData extends DataClass
       userId: userId == null && nullToAbsent
           ? const Value.absent()
           : Value(userId),
+      qrTokenHash: qrTokenHash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(qrTokenHash),
       nombre: Value(nombre),
       telefono: telefono == null && nullToAbsent
           ? const Value.absent()
@@ -1397,6 +1430,7 @@ class ClientesTableData extends DataClass
     return ClientesTableData(
       id: serializer.fromJson<String>(json['id']),
       userId: serializer.fromJson<String?>(json['userId']),
+      qrTokenHash: serializer.fromJson<String?>(json['qrTokenHash']),
       nombre: serializer.fromJson<String>(json['nombre']),
       telefono: serializer.fromJson<String?>(json['telefono']),
       visitasTotales: serializer.fromJson<int>(json['visitasTotales']),
@@ -1412,6 +1446,7 @@ class ClientesTableData extends DataClass
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'userId': serializer.toJson<String?>(userId),
+      'qrTokenHash': serializer.toJson<String?>(qrTokenHash),
       'nombre': serializer.toJson<String>(nombre),
       'telefono': serializer.toJson<String?>(telefono),
       'visitasTotales': serializer.toJson<int>(visitasTotales),
@@ -1425,6 +1460,7 @@ class ClientesTableData extends DataClass
   ClientesTableData copyWith({
     String? id,
     Value<String?> userId = const Value.absent(),
+    Value<String?> qrTokenHash = const Value.absent(),
     String? nombre,
     Value<String?> telefono = const Value.absent(),
     int? visitasTotales,
@@ -1435,6 +1471,7 @@ class ClientesTableData extends DataClass
   }) => ClientesTableData(
     id: id ?? this.id,
     userId: userId.present ? userId.value : this.userId,
+    qrTokenHash: qrTokenHash.present ? qrTokenHash.value : this.qrTokenHash,
     nombre: nombre ?? this.nombre,
     telefono: telefono.present ? telefono.value : this.telefono,
     visitasTotales: visitasTotales ?? this.visitasTotales,
@@ -1447,6 +1484,9 @@ class ClientesTableData extends DataClass
     return ClientesTableData(
       id: data.id.present ? data.id.value : this.id,
       userId: data.userId.present ? data.userId.value : this.userId,
+      qrTokenHash: data.qrTokenHash.present
+          ? data.qrTokenHash.value
+          : this.qrTokenHash,
       nombre: data.nombre.present ? data.nombre.value : this.nombre,
       telefono: data.telefono.present ? data.telefono.value : this.telefono,
       visitasTotales: data.visitasTotales.present
@@ -1468,6 +1508,7 @@ class ClientesTableData extends DataClass
     return (StringBuffer('ClientesTableData(')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
+          ..write('qrTokenHash: $qrTokenHash, ')
           ..write('nombre: $nombre, ')
           ..write('telefono: $telefono, ')
           ..write('visitasTotales: $visitasTotales, ')
@@ -1483,6 +1524,7 @@ class ClientesTableData extends DataClass
   int get hashCode => Object.hash(
     id,
     userId,
+    qrTokenHash,
     nombre,
     telefono,
     visitasTotales,
@@ -1497,6 +1539,7 @@ class ClientesTableData extends DataClass
       (other is ClientesTableData &&
           other.id == this.id &&
           other.userId == this.userId &&
+          other.qrTokenHash == this.qrTokenHash &&
           other.nombre == this.nombre &&
           other.telefono == this.telefono &&
           other.visitasTotales == this.visitasTotales &&
@@ -1509,6 +1552,7 @@ class ClientesTableData extends DataClass
 class ClientesTableCompanion extends UpdateCompanion<ClientesTableData> {
   final Value<String> id;
   final Value<String?> userId;
+  final Value<String?> qrTokenHash;
   final Value<String> nombre;
   final Value<String?> telefono;
   final Value<int> visitasTotales;
@@ -1520,6 +1564,7 @@ class ClientesTableCompanion extends UpdateCompanion<ClientesTableData> {
   const ClientesTableCompanion({
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
+    this.qrTokenHash = const Value.absent(),
     this.nombre = const Value.absent(),
     this.telefono = const Value.absent(),
     this.visitasTotales = const Value.absent(),
@@ -1532,6 +1577,7 @@ class ClientesTableCompanion extends UpdateCompanion<ClientesTableData> {
   ClientesTableCompanion.insert({
     required String id,
     this.userId = const Value.absent(),
+    this.qrTokenHash = const Value.absent(),
     required String nombre,
     this.telefono = const Value.absent(),
     this.visitasTotales = const Value.absent(),
@@ -1548,6 +1594,7 @@ class ClientesTableCompanion extends UpdateCompanion<ClientesTableData> {
   static Insertable<ClientesTableData> custom({
     Expression<String>? id,
     Expression<String>? userId,
+    Expression<String>? qrTokenHash,
     Expression<String>? nombre,
     Expression<String>? telefono,
     Expression<int>? visitasTotales,
@@ -1560,6 +1607,7 @@ class ClientesTableCompanion extends UpdateCompanion<ClientesTableData> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
+      if (qrTokenHash != null) 'qr_token_hash': qrTokenHash,
       if (nombre != null) 'nombre': nombre,
       if (telefono != null) 'telefono': telefono,
       if (visitasTotales != null) 'visitas_totales': visitasTotales,
@@ -1574,6 +1622,7 @@ class ClientesTableCompanion extends UpdateCompanion<ClientesTableData> {
   ClientesTableCompanion copyWith({
     Value<String>? id,
     Value<String?>? userId,
+    Value<String?>? qrTokenHash,
     Value<String>? nombre,
     Value<String?>? telefono,
     Value<int>? visitasTotales,
@@ -1586,6 +1635,7 @@ class ClientesTableCompanion extends UpdateCompanion<ClientesTableData> {
     return ClientesTableCompanion(
       id: id ?? this.id,
       userId: userId ?? this.userId,
+      qrTokenHash: qrTokenHash ?? this.qrTokenHash,
       nombre: nombre ?? this.nombre,
       telefono: telefono ?? this.telefono,
       visitasTotales: visitasTotales ?? this.visitasTotales,
@@ -1605,6 +1655,9 @@ class ClientesTableCompanion extends UpdateCompanion<ClientesTableData> {
     }
     if (userId.present) {
       map['user_id'] = Variable<String>(userId.value);
+    }
+    if (qrTokenHash.present) {
+      map['qr_token_hash'] = Variable<String>(qrTokenHash.value);
     }
     if (nombre.present) {
       map['nombre'] = Variable<String>(nombre.value);
@@ -1638,6 +1691,7 @@ class ClientesTableCompanion extends UpdateCompanion<ClientesTableData> {
     return (StringBuffer('ClientesTableCompanion(')
           ..write('id: $id, ')
           ..write('userId: $userId, ')
+          ..write('qrTokenHash: $qrTokenHash, ')
           ..write('nombre: $nombre, ')
           ..write('telefono: $telefono, ')
           ..write('visitasTotales: $visitasTotales, ')
@@ -4986,6 +5040,17 @@ class $VisitasClientesTableTable extends VisitasClientesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _usuarioIdMeta = const VerificationMeta(
+    'usuarioId',
+  );
+  @override
+  late final GeneratedColumn<String> usuarioId = GeneratedColumn<String>(
+    'usuario_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _fechaMeta = const VerificationMeta('fecha');
   @override
   late final GeneratedColumn<String> fecha = GeneratedColumn<String>(
@@ -5033,6 +5098,7 @@ class $VisitasClientesTableTable extends VisitasClientesTable
   List<GeneratedColumn> get $columns => [
     id,
     clienteId,
+    usuarioId,
     fecha,
     puntosOtorgados,
     registradoPor,
@@ -5062,6 +5128,12 @@ class $VisitasClientesTableTable extends VisitasClientesTable
       );
     } else if (isInserting) {
       context.missing(_clienteIdMeta);
+    }
+    if (data.containsKey('usuario_id')) {
+      context.handle(
+        _usuarioIdMeta,
+        usuarioId.isAcceptableOrUnknown(data['usuario_id']!, _usuarioIdMeta),
+      );
     }
     if (data.containsKey('fecha')) {
       context.handle(
@@ -5117,6 +5189,10 @@ class $VisitasClientesTableTable extends VisitasClientesTable
         DriftSqlType.string,
         data['${effectivePrefix}cliente_id'],
       )!,
+      usuarioId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}usuario_id'],
+      ),
       fecha: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}fecha'],
@@ -5146,6 +5222,7 @@ class VisitasClientesTableData extends DataClass
     implements Insertable<VisitasClientesTableData> {
   final String id;
   final String clienteId;
+  final String? usuarioId;
   final String fecha;
   final int puntosOtorgados;
   final String? registradoPor;
@@ -5153,6 +5230,7 @@ class VisitasClientesTableData extends DataClass
   const VisitasClientesTableData({
     required this.id,
     required this.clienteId,
+    this.usuarioId,
     required this.fecha,
     required this.puntosOtorgados,
     this.registradoPor,
@@ -5163,6 +5241,9 @@ class VisitasClientesTableData extends DataClass
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['cliente_id'] = Variable<String>(clienteId);
+    if (!nullToAbsent || usuarioId != null) {
+      map['usuario_id'] = Variable<String>(usuarioId);
+    }
     map['fecha'] = Variable<String>(fecha);
     map['puntos_otorgados'] = Variable<int>(puntosOtorgados);
     if (!nullToAbsent || registradoPor != null) {
@@ -5176,6 +5257,9 @@ class VisitasClientesTableData extends DataClass
     return VisitasClientesTableCompanion(
       id: Value(id),
       clienteId: Value(clienteId),
+      usuarioId: usuarioId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(usuarioId),
       fecha: Value(fecha),
       puntosOtorgados: Value(puntosOtorgados),
       registradoPor: registradoPor == null && nullToAbsent
@@ -5193,6 +5277,7 @@ class VisitasClientesTableData extends DataClass
     return VisitasClientesTableData(
       id: serializer.fromJson<String>(json['id']),
       clienteId: serializer.fromJson<String>(json['clienteId']),
+      usuarioId: serializer.fromJson<String?>(json['usuarioId']),
       fecha: serializer.fromJson<String>(json['fecha']),
       puntosOtorgados: serializer.fromJson<int>(json['puntosOtorgados']),
       registradoPor: serializer.fromJson<String?>(json['registradoPor']),
@@ -5205,6 +5290,7 @@ class VisitasClientesTableData extends DataClass
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'clienteId': serializer.toJson<String>(clienteId),
+      'usuarioId': serializer.toJson<String?>(usuarioId),
       'fecha': serializer.toJson<String>(fecha),
       'puntosOtorgados': serializer.toJson<int>(puntosOtorgados),
       'registradoPor': serializer.toJson<String?>(registradoPor),
@@ -5215,6 +5301,7 @@ class VisitasClientesTableData extends DataClass
   VisitasClientesTableData copyWith({
     String? id,
     String? clienteId,
+    Value<String?> usuarioId = const Value.absent(),
     String? fecha,
     int? puntosOtorgados,
     Value<String?> registradoPor = const Value.absent(),
@@ -5222,6 +5309,7 @@ class VisitasClientesTableData extends DataClass
   }) => VisitasClientesTableData(
     id: id ?? this.id,
     clienteId: clienteId ?? this.clienteId,
+    usuarioId: usuarioId.present ? usuarioId.value : this.usuarioId,
     fecha: fecha ?? this.fecha,
     puntosOtorgados: puntosOtorgados ?? this.puntosOtorgados,
     registradoPor: registradoPor.present
@@ -5235,6 +5323,7 @@ class VisitasClientesTableData extends DataClass
     return VisitasClientesTableData(
       id: data.id.present ? data.id.value : this.id,
       clienteId: data.clienteId.present ? data.clienteId.value : this.clienteId,
+      usuarioId: data.usuarioId.present ? data.usuarioId.value : this.usuarioId,
       fecha: data.fecha.present ? data.fecha.value : this.fecha,
       puntosOtorgados: data.puntosOtorgados.present
           ? data.puntosOtorgados.value
@@ -5251,6 +5340,7 @@ class VisitasClientesTableData extends DataClass
     return (StringBuffer('VisitasClientesTableData(')
           ..write('id: $id, ')
           ..write('clienteId: $clienteId, ')
+          ..write('usuarioId: $usuarioId, ')
           ..write('fecha: $fecha, ')
           ..write('puntosOtorgados: $puntosOtorgados, ')
           ..write('registradoPor: $registradoPor, ')
@@ -5263,6 +5353,7 @@ class VisitasClientesTableData extends DataClass
   int get hashCode => Object.hash(
     id,
     clienteId,
+    usuarioId,
     fecha,
     puntosOtorgados,
     registradoPor,
@@ -5274,6 +5365,7 @@ class VisitasClientesTableData extends DataClass
       (other is VisitasClientesTableData &&
           other.id == this.id &&
           other.clienteId == this.clienteId &&
+          other.usuarioId == this.usuarioId &&
           other.fecha == this.fecha &&
           other.puntosOtorgados == this.puntosOtorgados &&
           other.registradoPor == this.registradoPor &&
@@ -5284,6 +5376,7 @@ class VisitasClientesTableCompanion
     extends UpdateCompanion<VisitasClientesTableData> {
   final Value<String> id;
   final Value<String> clienteId;
+  final Value<String?> usuarioId;
   final Value<String> fecha;
   final Value<int> puntosOtorgados;
   final Value<String?> registradoPor;
@@ -5292,6 +5385,7 @@ class VisitasClientesTableCompanion
   const VisitasClientesTableCompanion({
     this.id = const Value.absent(),
     this.clienteId = const Value.absent(),
+    this.usuarioId = const Value.absent(),
     this.fecha = const Value.absent(),
     this.puntosOtorgados = const Value.absent(),
     this.registradoPor = const Value.absent(),
@@ -5301,6 +5395,7 @@ class VisitasClientesTableCompanion
   VisitasClientesTableCompanion.insert({
     required String id,
     required String clienteId,
+    this.usuarioId = const Value.absent(),
     required String fecha,
     this.puntosOtorgados = const Value.absent(),
     this.registradoPor = const Value.absent(),
@@ -5313,6 +5408,7 @@ class VisitasClientesTableCompanion
   static Insertable<VisitasClientesTableData> custom({
     Expression<String>? id,
     Expression<String>? clienteId,
+    Expression<String>? usuarioId,
     Expression<String>? fecha,
     Expression<int>? puntosOtorgados,
     Expression<String>? registradoPor,
@@ -5322,6 +5418,7 @@ class VisitasClientesTableCompanion
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (clienteId != null) 'cliente_id': clienteId,
+      if (usuarioId != null) 'usuario_id': usuarioId,
       if (fecha != null) 'fecha': fecha,
       if (puntosOtorgados != null) 'puntos_otorgados': puntosOtorgados,
       if (registradoPor != null) 'registrado_por': registradoPor,
@@ -5333,6 +5430,7 @@ class VisitasClientesTableCompanion
   VisitasClientesTableCompanion copyWith({
     Value<String>? id,
     Value<String>? clienteId,
+    Value<String?>? usuarioId,
     Value<String>? fecha,
     Value<int>? puntosOtorgados,
     Value<String?>? registradoPor,
@@ -5342,6 +5440,7 @@ class VisitasClientesTableCompanion
     return VisitasClientesTableCompanion(
       id: id ?? this.id,
       clienteId: clienteId ?? this.clienteId,
+      usuarioId: usuarioId ?? this.usuarioId,
       fecha: fecha ?? this.fecha,
       puntosOtorgados: puntosOtorgados ?? this.puntosOtorgados,
       registradoPor: registradoPor ?? this.registradoPor,
@@ -5358,6 +5457,9 @@ class VisitasClientesTableCompanion
     }
     if (clienteId.present) {
       map['cliente_id'] = Variable<String>(clienteId.value);
+    }
+    if (usuarioId.present) {
+      map['usuario_id'] = Variable<String>(usuarioId.value);
     }
     if (fecha.present) {
       map['fecha'] = Variable<String>(fecha.value);
@@ -5382,6 +5484,7 @@ class VisitasClientesTableCompanion
     return (StringBuffer('VisitasClientesTableCompanion(')
           ..write('id: $id, ')
           ..write('clienteId: $clienteId, ')
+          ..write('usuarioId: $usuarioId, ')
           ..write('fecha: $fecha, ')
           ..write('puntosOtorgados: $puntosOtorgados, ')
           ..write('registradoPor: $registradoPor, ')
@@ -8757,6 +8860,7 @@ typedef $$ClientesTableTableCreateCompanionBuilder =
     ClientesTableCompanion Function({
       required String id,
       Value<String?> userId,
+      Value<String?> qrTokenHash,
       required String nombre,
       Value<String?> telefono,
       Value<int> visitasTotales,
@@ -8770,6 +8874,7 @@ typedef $$ClientesTableTableUpdateCompanionBuilder =
     ClientesTableCompanion Function({
       Value<String> id,
       Value<String?> userId,
+      Value<String?> qrTokenHash,
       Value<String> nombre,
       Value<String?> telefono,
       Value<int> visitasTotales,
@@ -8796,6 +8901,11 @@ class $$ClientesTableTableFilterComposer
 
   ColumnFilters<String> get userId => $composableBuilder(
     column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get qrTokenHash => $composableBuilder(
+    column: $table.qrTokenHash,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8854,6 +8964,11 @@ class $$ClientesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get qrTokenHash => $composableBuilder(
+    column: $table.qrTokenHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get nombre => $composableBuilder(
     column: $table.nombre,
     builder: (column) => ColumnOrderings(column),
@@ -8904,6 +9019,11 @@ class $$ClientesTableTableAnnotationComposer
 
   GeneratedColumn<String> get userId =>
       $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get qrTokenHash => $composableBuilder(
+    column: $table.qrTokenHash,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get nombre =>
       $composableBuilder(column: $table.nombre, builder: (column) => column);
@@ -8970,6 +9090,7 @@ class $$ClientesTableTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String?> userId = const Value.absent(),
+                Value<String?> qrTokenHash = const Value.absent(),
                 Value<String> nombre = const Value.absent(),
                 Value<String?> telefono = const Value.absent(),
                 Value<int> visitasTotales = const Value.absent(),
@@ -8981,6 +9102,7 @@ class $$ClientesTableTableTableManager
               }) => ClientesTableCompanion(
                 id: id,
                 userId: userId,
+                qrTokenHash: qrTokenHash,
                 nombre: nombre,
                 telefono: telefono,
                 visitasTotales: visitasTotales,
@@ -8994,6 +9116,7 @@ class $$ClientesTableTableTableManager
               ({
                 required String id,
                 Value<String?> userId = const Value.absent(),
+                Value<String?> qrTokenHash = const Value.absent(),
                 required String nombre,
                 Value<String?> telefono = const Value.absent(),
                 Value<int> visitasTotales = const Value.absent(),
@@ -9005,6 +9128,7 @@ class $$ClientesTableTableTableManager
               }) => ClientesTableCompanion.insert(
                 id: id,
                 userId: userId,
+                qrTokenHash: qrTokenHash,
                 nombre: nombre,
                 telefono: telefono,
                 visitasTotales: visitasTotales,
@@ -10744,6 +10868,7 @@ typedef $$VisitasClientesTableTableCreateCompanionBuilder =
     VisitasClientesTableCompanion Function({
       required String id,
       required String clienteId,
+      Value<String?> usuarioId,
       required String fecha,
       Value<int> puntosOtorgados,
       Value<String?> registradoPor,
@@ -10754,6 +10879,7 @@ typedef $$VisitasClientesTableTableUpdateCompanionBuilder =
     VisitasClientesTableCompanion Function({
       Value<String> id,
       Value<String> clienteId,
+      Value<String?> usuarioId,
       Value<String> fecha,
       Value<int> puntosOtorgados,
       Value<String?> registradoPor,
@@ -10777,6 +10903,11 @@ class $$VisitasClientesTableTableFilterComposer
 
   ColumnFilters<String> get clienteId => $composableBuilder(
     column: $table.clienteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get usuarioId => $composableBuilder(
+    column: $table.usuarioId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10820,6 +10951,11 @@ class $$VisitasClientesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get usuarioId => $composableBuilder(
+    column: $table.usuarioId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get fecha => $composableBuilder(
     column: $table.fecha,
     builder: (column) => ColumnOrderings(column),
@@ -10855,6 +10991,9 @@ class $$VisitasClientesTableTableAnnotationComposer
 
   GeneratedColumn<String> get clienteId =>
       $composableBuilder(column: $table.clienteId, builder: (column) => column);
+
+  GeneratedColumn<String> get usuarioId =>
+      $composableBuilder(column: $table.usuarioId, builder: (column) => column);
 
   GeneratedColumn<String> get fecha =>
       $composableBuilder(column: $table.fecha, builder: (column) => column);
@@ -10918,6 +11057,7 @@ class $$VisitasClientesTableTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> clienteId = const Value.absent(),
+                Value<String?> usuarioId = const Value.absent(),
                 Value<String> fecha = const Value.absent(),
                 Value<int> puntosOtorgados = const Value.absent(),
                 Value<String?> registradoPor = const Value.absent(),
@@ -10926,6 +11066,7 @@ class $$VisitasClientesTableTableTableManager
               }) => VisitasClientesTableCompanion(
                 id: id,
                 clienteId: clienteId,
+                usuarioId: usuarioId,
                 fecha: fecha,
                 puntosOtorgados: puntosOtorgados,
                 registradoPor: registradoPor,
@@ -10936,6 +11077,7 @@ class $$VisitasClientesTableTableTableManager
               ({
                 required String id,
                 required String clienteId,
+                Value<String?> usuarioId = const Value.absent(),
                 required String fecha,
                 Value<int> puntosOtorgados = const Value.absent(),
                 Value<String?> registradoPor = const Value.absent(),
@@ -10944,6 +11086,7 @@ class $$VisitasClientesTableTableTableManager
               }) => VisitasClientesTableCompanion.insert(
                 id: id,
                 clienteId: clienteId,
+                usuarioId: usuarioId,
                 fecha: fecha,
                 puntosOtorgados: puntosOtorgados,
                 registradoPor: registradoPor,
