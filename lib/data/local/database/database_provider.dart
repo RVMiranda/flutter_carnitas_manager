@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:exquisssita_manager/data/local/database/app_database.dart';
+import 'local_persistence.dart';
 
 part 'database_provider.g.dart';
 
@@ -15,3 +16,7 @@ AppDatabase appDatabase(Ref ref) {
   ref.onDispose(db.close);
   return db;
 }
+
+@Riverpod(keepAlive: true)
+LocalPersistence localPersistence(Ref ref) =>
+    LocalPersistence(ref.watch(appDatabaseProvider));
