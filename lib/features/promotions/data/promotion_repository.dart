@@ -26,6 +26,9 @@ class LocalPromotionRepository implements PromotionRepository {
     draft.validate();
     final now = DateTime.now().millisecondsSinceEpoch;
     final payload = draft.toJson();
+    final existing = await (_database.select(_database.promocionesTable)
+          ..where((p) => p.id.equals(draft.id)))
+        .getSingleOrNull();
     await _database.transaction(() async {
       await _database
           .into(_database.promocionesTable)
@@ -44,7 +47,12 @@ class LocalPromotionRepository implements PromotionRepository {
               updatedAt: now,
             ),
           );
-      await _enqueue(draft.id, payload, now);
+      await _enqueue(
+        draft.id,
+        payload,
+        now,
+        operation: existing == null ? SyncOperation.insert : SyncOperation.update,
+      );
     });
   }
 
@@ -71,11 +79,16 @@ class LocalPromotionRepository implements PromotionRepository {
       )..where((p) => p.id.equals(id))).write(
         PromocionesTableCompanion(activo: Value(active), updatedAt: Value(now)),
       );
-      await _enqueue(id, payload, now);
+      await _enqueue(id, payload, now, operation: SyncOperation.update);
     });
   }
 
-  Future<void> _enqueue(String id, Map<String, Object?> payload, int now) =>
+  Future<void> _enqueue(
+    String id,
+    Map<String, Object?> payload,
+    int now, {
+    required String operation,
+  }) =>
       _database
           .into(_database.syncQueueTable)
           .insert(
@@ -83,7 +96,7 @@ class LocalPromotionRepository implements PromotionRepository {
               id: const Uuid().v4(),
               entity: 'promociones',
               entityId: id,
-              operation: SyncOperation.insert,
+              operation: operation,
               payload: LocalPersistence.encodePayload(payload),
               idempotencyKey: const Uuid().v4(),
               createdAt: now,
