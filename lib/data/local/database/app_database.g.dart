@@ -8286,6 +8286,34 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $HistorialPagosEmpleadosTableTable historialPagosEmpleadosTable =
       $HistorialPagosEmpleadosTableTable(this);
+  late final Index syncQueueStatusCreated = Index(
+    'sync_queue_status_created',
+    'CREATE INDEX sync_queue_status_created ON sync_queue (status, created_at)',
+  );
+  late final Index mesasEstadoNumero = Index(
+    'mesas_estado_numero',
+    'CREATE INDEX mesas_estado_numero ON mesas (estado, numero_mesa)',
+  );
+  late final Index productosActivoNombre = Index(
+    'productos_activo_nombre',
+    'CREATE INDEX productos_activo_nombre ON productos (activo, nombre)',
+  );
+  late final Index ordenesEstadoApertura = Index(
+    'ordenes_estado_apertura',
+    'CREATE INDEX ordenes_estado_apertura ON ordenes (estado, fecha_apertura)',
+  );
+  late final Index detalleOrdenOrden = Index(
+    'detalle_orden_orden',
+    'CREATE INDEX detalle_orden_orden ON detalle_orden (orden_id)',
+  );
+  late final Index transaccionesFecha = Index(
+    'transacciones_fecha',
+    'CREATE INDEX transacciones_fecha ON transacciones (fecha)',
+  );
+  late final Index visitasUsuarioFecha = Index(
+    'visitas_usuario_fecha',
+    'CREATE INDEX visitas_usuario_fecha ON visitas_clientes (usuario_id, fecha)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8306,6 +8334,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     promocionesTable,
     ventaDiariaTable,
     historialPagosEmpleadosTable,
+    syncQueueStatusCreated,
+    mesasEstadoNumero,
+    productosActivoNombre,
+    ordenesEstadoApertura,
+    detalleOrdenOrden,
+    transaccionesFecha,
+    visitasUsuarioFecha,
   ];
 }
 

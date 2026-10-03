@@ -67,6 +67,7 @@ dev_dependencies:
 
   # ── Testing ───────────────────────────────────────────────────────────────────
   mocktail: ^1.0.4               # Mocking sin build_runner
+  sqlite3: ^2.9.4                # Executor SQLite para pruebas de migración
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURACIÓN DE FLUTTER
