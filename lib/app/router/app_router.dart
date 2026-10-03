@@ -13,6 +13,8 @@ import 'package:exquisssita_manager/features/loyalty/presentation/qr_scanner_vie
 import 'package:exquisssita_manager/features/promotions/presentation/promotions_view.dart';
 import 'package:exquisssita_manager/features/cash_register/presentation/cash_register_view.dart';
 import 'package:exquisssita_manager/features/orders/presentation/orders_view.dart';
+import 'package:exquisssita_manager/features/inventory/presentation/inventory_view.dart';
+import 'package:exquisssita_manager/features/employees/presentation/employees_view.dart';
 
 part 'app_router.g.dart';
 
@@ -71,8 +73,7 @@ GoRouter appRouter(Ref ref) {
           GoRoute(
             path: AppRoutes.inventory,
             name: 'inventory',
-            builder: (context, state) =>
-                const _PlaceholderScreen(title: 'Menú e Inventario'),
+            builder: (context, state) => const InventoryView(),
           ),
           GoRoute(
             path: AppRoutes.loyaltyQr,
@@ -82,8 +83,7 @@ GoRouter appRouter(Ref ref) {
           GoRoute(
             path: AppRoutes.employees,
             name: 'employees',
-            builder: (context, state) =>
-                const _PlaceholderScreen(title: 'Empleados'),
+            builder: (context, state) => const EmployeesView(),
           ),
           GoRoute(
             path: AppRoutes.promotions,
@@ -109,23 +109,4 @@ GoRouter appRouter(Ref ref) {
       ),
     ),
   );
-}
-
-/// Pantalla placeholder para rutas no implementadas aún.
-/// Se reemplaza en fases posteriores.
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        ExquisssitaPageHeader(title: title),
-        const ExquisssitaEmptyState(
-          message: 'Este módulo está en preparación.',
-        ),
-      ],
-    );
-  }
 }

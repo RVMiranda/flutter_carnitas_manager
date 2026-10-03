@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:exquisssita_manager/data/local/database/app_database.dart';
 
+import '../../../app/theme/exquisssita_tokens.dart';
+import '../../../shared/widgets/exquisssita_components.dart';
 import '../data/promotion_providers.dart';
 import '../domain/promotion_models.dart';
+import 'promotion_view_model.dart';
 
 class PromotionsView extends ConsumerWidget {
   const PromotionsView({super.key});
@@ -11,62 +14,129 @@ class PromotionsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final promotions = ref.watch(promotionsProvider);
+    final actionVm = ref.read(promotionViewModelProvider.notifier);
+    final t = context.exq;
+    final m = t.metrics;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Promociones'),
-        actions: [
-          IconButton(
-            tooltip: 'Nueva promoción',
-            onPressed: () => _openEditor(context, ref),
-            icon: const Icon(Icons.add),
+      body: Column(
+        children: [
+          ExquisssitaPageHeader(
+            title: 'Promociones',
+            action: ExquisssitaAction(
+              label: 'Nueva promoción',
+              icon: Icons.add_outlined,
+              onPressed: () => _openEditor(context, ref),
+            ),
+          ),
+          Expanded(
+            child: promotions.when(
+              loading: () => const ExquisssitaSkeleton(),
+              error: (_, _) => ExquisssitaErrorState(
+                onRetry: () => ref.invalidate(promotionsProvider),
+              ),
+              data: (items) => items.isEmpty
+                  ? const SingleChildScrollView(
+                      child: ExquisssitaEmptyState(
+                        message: 'Aún no hay promociones.',
+                        icon: Icons.local_offer_outlined,
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: EdgeInsets.all(m.spaceXl),
+                      itemCount: items.length,
+                      separatorBuilder: (_, _) => SizedBox(height: m.spaceM),
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        return ExquisssitaSurface(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              ExquisssitaPressable(
+                                label:
+                                    'Editar ${item.titulo}. ${item.descripcion}',
+                                onPressed: () =>
+                                    _openEditor(context, ref, item),
+                                child: Row(
+                                  children: [
+                                    ExcludeSemantics(
+                                      child: item.imagenUrl == null
+                                          ? Icon(
+                                              Icons.local_offer_outlined,
+                                              size: m.iconLarge,
+                                              color: t.foreground,
+                                            )
+                                          : ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    m.radiusSmall,
+                                                  ),
+                                              child: Image.network(
+                                                item.imagenUrl!,
+                                                width: m.image,
+                                                height: m.image,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, _, _) => Icon(
+                                                  Icons.broken_image_outlined,
+                                                  color: t.foreground,
+                                                  size: m.iconLarge,
+                                                ),
+                                              ),
+                                            ),
+                                    ),
+                                    SizedBox(width: m.spaceM),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(item.titulo, style: t.label),
+                                          Text(item.descripcion, style: t.body),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.edit_outlined,
+                                      color: t.foreground,
+                                      size: m.iconSmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: m.spaceS),
+                              ExquisssitaAction(
+                                primary: false,
+                                label: item.activo
+                                    ? 'Desactivar promoción'
+                                    : 'Publicar promoción',
+                                icon: item.activo
+                                    ? Icons.check_circle_outline
+                                    : Icons.radio_button_unchecked_outlined,
+                                onPressed: () async {
+                                  try {
+                                    await actionVm.setActive(item.id, !item.activo);
+                                  } catch (_) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'No fue posible cambiar la publicación. Intenta de nuevo.',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
           ),
         ],
-      ),
-      body: promotions.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Text('No se pudieron cargar las promociones: $error'),
-        ),
-        data: (items) => items.isEmpty
-            ? const Center(child: Text('Aún no hay promociones.'))
-            : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return Card(
-                    child: ListTile(
-                      leading: item.imagenUrl == null
-                          ? const Icon(Icons.local_offer_outlined)
-                          : Image.network(
-                              item.imagenUrl!,
-                              width: 56,
-                              height: 56,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stack) =>
-                                  const Icon(Icons.broken_image_outlined),
-                            ),
-                      title: Text(item.titulo),
-                      subtitle: Text(
-                        item.descripcion,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: Switch(
-                        value: item.activo,
-                        onChanged: (active) => ref
-                            .read(promotionRepositoryProvider)
-                            .setActive(item.id, active),
-                      ),
-                      onTap: () => _openEditor(context, ref, item),
-                    ),
-                  );
-                },
-              ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openEditor(context, ref),
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -86,75 +156,24 @@ class PromotionsView extends ConsumerWidget {
         ? null
         : DateTime.tryParse(current!.fechaVencimiento!);
     var active = current?.activo ?? true;
-    final saved = await showDialog<bool>(
+    var saving = false;
+    final saved = await showExquisssitaModal<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(current == null ? 'Nueva promoción' : 'Editar promoción'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: title,
-                  decoration: const InputDecoration(labelText: 'Título'),
-                ),
-                TextField(
-                  controller: description,
-                  maxLines: 4,
-                  decoration: const InputDecoration(labelText: 'Descripción'),
-                ),
-                TextField(
-                  controller: imageUrl,
-                  decoration: const InputDecoration(
-                    labelText: 'URL de imagen (opcional)',
-                  ),
-                ),
-                SwitchListTile(
-                  title: const Text('Publicada'),
-                  value: active,
-                  onChanged: (value) => setState(() => active = value),
-                ),
-                ListTile(
-                  title: Text(
-                    'Publicación: ${publishedAt.toLocal().toString().split(' ').first}',
-                  ),
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2100),
-                      initialDate: publishedAt,
-                    );
-                    if (date != null) setState(() => publishedAt = date);
-                  },
-                ),
-                ListTile(
-                  title: Text(
-                    expiresAt == null
-                        ? 'Sin vencimiento'
-                        : 'Vence: ${expiresAt!.toLocal().toString().split(' ').first}',
-                  ),
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      firstDate: publishedAt,
-                      lastDate: DateTime(2100),
-                      initialDate: expiresAt ?? publishedAt,
-                    );
-                    if (date != null) setState(() => expiresAt = date);
-                  },
-                ),
-              ],
-            ),
-          ),
+        builder: (context, setState) => ExquisssitaModal(
+          title: current == null ? 'Nueva promoción' : 'Editar promoción',
           actions: [
-            TextButton(
+            ExquisssitaAction(
+              primary: false,
+              label: 'Cancelar',
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancelar'),
             ),
-            FilledButton(
+            ExquisssitaAction(
+              label: 'Guardar',
+              busy: saving,
               onPressed: () async {
+                if (saving) return;
+                setState(() => saving = true);
                 try {
                   final draft = PromotionDraft(
                     id: current?.id,
@@ -169,16 +188,79 @@ class PromotionsView extends ConsumerWidget {
                   );
                   await ref.read(promotionRepositoryProvider).save(draft);
                   if (dialogContext.mounted) Navigator.pop(dialogContext, true);
-                } catch (error) {
+                } catch (_) {
                   if (!dialogContext.mounted) return;
-                  ScaffoldMessenger.of(
-                    dialogContext,
-                  ).showSnackBar(SnackBar(content: Text('$error')));
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Revisa título, descripción y fechas. No fue posible guardar la promoción.',
+                      ),
+                    ),
+                  );
+                } finally {
+                  if (dialogContext.mounted) setState(() => saving = false);
                 }
               },
-              child: const Text('Guardar'),
             ),
           ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ExquisssitaFormField(controller: title, label: 'Título'),
+                ExquisssitaFormField(
+                  controller: description,
+                  maxLines: 4,
+                  label: 'Descripción',
+                ),
+                ExquisssitaFormField(
+                  controller: imageUrl,
+                  label: 'URL de imagen (opcional)',
+                ),
+                ExquisssitaAction(
+                  primary: false,
+                  label: active ? 'Publicada: sí' : 'Publicada: no',
+                  onPressed: () => setState(() => active = !active),
+                ),
+                ExquisssitaAction(
+                  primary: false,
+                  label:
+                      'Publicación: ${publishedAt.toLocal().toString().split(' ').first}',
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2100),
+                      initialDate: publishedAt,
+                    );
+                    if (date != null && context.mounted) {
+                      setState(() => publishedAt = date);
+                    }
+                  },
+                ),
+                ExquisssitaAction(
+                  primary: false,
+                  label: expiresAt == null
+                      ? 'Sin vencimiento'
+                      : 'Vence: ${expiresAt!.toLocal().toString().split(' ').first}',
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      firstDate: publishedAt,
+                      lastDate: DateTime(2100),
+                      initialDate:
+                          expiresAt == null || expiresAt!.isBefore(publishedAt)
+                          ? publishedAt
+                          : expiresAt,
+                    );
+                    if (date != null && context.mounted) {
+                      setState(() => expiresAt = date);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

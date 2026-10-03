@@ -6,11 +6,16 @@ import 'package:exquisssita_manager/core/errors/failure.dart';
 import 'package:exquisssita_manager/core/logging/app_logger.dart';
 import 'package:exquisssita_manager/core/result/result.dart';
 import 'package:exquisssita_manager/core/permissions/permission.dart';
+import 'package:exquisssita_manager/features/auth/data/auth_repository.dart';
 
 export 'package:exquisssita_manager/core/permissions/permission.dart'
     show AppRole;
 
 part 'auth_vm.g.dart';
+
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => AuthRepository(Supabase.instance.client),
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Estado de autenticación
@@ -46,13 +51,11 @@ final currentUserRoleProvider = FutureProvider<AppRole>((ref) async {
   if (authState == null) return AppRole.employee;
 
   try {
-    final row = await Supabase.instance.client
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', authState.id)
-        .maybeSingle();
+    final role = await RoleRepository(
+      Supabase.instance.client,
+    ).roleFor(authState.id);
 
-    return switch (row?['role']) {
+    return switch (role) {
       'admin' => AppRole.admin,
       _ => AppRole.employee,
     };
@@ -107,27 +110,15 @@ class AuthViewModel extends _$AuthViewModel {
     state = state.copyWith(isLoading: true, clearFailure: true);
 
     try {
-      final response = await Supabase.instance.client.auth.signInWithPassword(
-        email: email.trim(),
-        password: password,
-      );
-
-      if (response.user == null) {
-        const failure = AuthFailure();
-        state = state.copyWith(isLoading: false, failure: failure);
-        return const Result.err(AuthFailure());
-      }
+      final user = await ref
+          .read(authRepositoryProvider)
+          .signIn(email: email, password: password);
 
       AppLogger.info('Usuario autenticado', tag: 'Auth');
       state = state.copyWith(isLoading: false);
-      return Result.ok(response.user!);
-    } on AuthException catch (e) {
-      AppLogger.warning(
-        'Error de autenticación: ${e.message}',
-        tag: 'Auth',
-        error: e,
-      );
-      final failure = AuthFailure(technicalDetails: e.message);
+      return Result.ok(user);
+    } on Failure catch (failure) {
+      AppLogger.warning('Error de autenticación', tag: 'Auth', error: failure);
       state = state.copyWith(isLoading: false, failure: failure);
       return Result.err(failure);
     } catch (e, st) {
@@ -146,7 +137,7 @@ class AuthViewModel extends _$AuthViewModel {
   /// Cierra la sesión del usuario actual.
   Future<void> signOut() async {
     try {
-      await Supabase.instance.client.auth.signOut();
+      await ref.read(authRepositoryProvider).signOut();
       AppLogger.info('Sesión cerrada', tag: 'Auth');
     } catch (e) {
       AppLogger.error('Error al cerrar sesión', tag: 'Auth', error: e);

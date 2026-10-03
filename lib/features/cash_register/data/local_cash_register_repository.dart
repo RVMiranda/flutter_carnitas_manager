@@ -13,7 +13,16 @@ class LocalCashRegisterRepository implements CashRegisterRepository {
   Stream<CashRegisterSummary> watchSummary(DateTime date) async* {
     yield await _buildSummary(date);
     await for (final _
-        in _database.select(_database.transaccionesTable).watch()) {
+        in _database
+            .customSelect(
+              'SELECT COUNT(*) FROM transacciones',
+              readsFrom: {
+                _database.transaccionesTable,
+                _database.syncQueueTable,
+                _database.ventaDiariaTable,
+              },
+            )
+            .watch()) {
       yield await _buildSummary(date);
     }
   }
@@ -30,7 +39,18 @@ class LocalCashRegisterRepository implements CashRegisterRepository {
             ))
             .get();
     var cash = 0, card = 0, other = 0;
-    for (final transaction in transactions) {
+    final unsettled =
+        await (_database.select(_database.syncQueueTable)..where(
+              (t) =>
+                  t.entity.equals('registrar_pago') &
+                  t.status.isNotValue('completed'),
+            ))
+            .get();
+    final unsettledKeys = unsettled.map((op) => op.idempotencyKey).toSet();
+    final confirmed = transactions
+        .where((t) => !unsettledKeys.contains(t.idempotencyKey))
+        .toList();
+    for (final transaction in confirmed) {
       switch (transaction.metodoPago) {
         case 'Efectivo':
           cash += transaction.montoCentavos;
@@ -49,17 +69,19 @@ class LocalCashRegisterRepository implements CashRegisterRepository {
       cardCents: card,
       otherCents: other,
       totalCents: cash + card + other,
-      orderCount: transactions.map((t) => t.ordenId).toSet().length,
-      closed: closed != null,
+      orderCount: confirmed.map((t) => t.ordenId).toSet().length,
+      closed: closed != null && closed.id > 0,
     );
   }
 
   @override
   Stream<List<CashRegisterClosure>> watchClosures() async* {
     Future<List<CashRegisterClosure>> read() async {
-      final rows = await (_database.select(_database.ventaDiariaTable)
-            ..orderBy([(v) => OrderingTerm.desc(v.fecha)]))
-          .get();
+      final rows =
+          await (_database.select(_database.ventaDiariaTable)
+                ..where((v) => v.id.isBiggerThanValue(0))
+                ..orderBy([(v) => OrderingTerm.desc(v.fecha)]))
+              .get();
       return rows
           .map(
             (row) => CashRegisterClosure(
@@ -76,7 +98,8 @@ class LocalCashRegisterRepository implements CashRegisterRepository {
     }
 
     yield await read();
-    await for (final _ in _database.select(_database.ventaDiariaTable).watch()) {
+    await for (final _
+        in _database.select(_database.ventaDiariaTable).watch()) {
       yield await read();
     }
   }
@@ -85,6 +108,18 @@ class LocalCashRegisterRepository implements CashRegisterRepository {
   Future<CashRegisterSummary> close(DateTime date) async {
     final summary = await _buildSummary(date);
     if (summary.closed) return summary;
+    final provisional = await (_database.select(
+      _database.ventaDiariaTable,
+    )..where((v) => v.fecha.equals(_dateKey(summary.date)))).getSingleOrNull();
+    if (provisional != null) return summary;
+    final unresolved = await _database
+        .customSelect(
+          "SELECT q.id FROM sync_queue q JOIN critical_operations c ON c.operation_id=q.id WHERE q.entity='registrar_pago' AND NOT (c.state='rejected' AND c.acknowledged=1) AND (c.state<>'confirmed' OR NOT EXISTS(SELECT 1 FROM transacciones t WHERE t.idempotency_key=q.idempotency_key))",
+        )
+        .get();
+    if (unresolved.isNotEmpty) {
+      throw StateError('Hay pagos pendientes de confirmación o revisión.');
+    }
     final now = DateTime.now().millisecondsSinceEpoch;
     await _database.transaction(() async {
       await _database
@@ -124,7 +159,6 @@ class LocalCashRegisterRepository implements CashRegisterRepository {
       otherCents: summary.otherCents,
       totalCents: summary.totalCents,
       orderCount: summary.orderCount,
-      closed: true,
     );
   }
 
