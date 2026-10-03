@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:exquisssita_manager/features/auth/presentation/views/login_view.dart';
 import 'package:exquisssita_manager/features/auth/presentation/view_models/auth_vm.dart';
 import 'package:exquisssita_manager/shared/navigation/main_shell.dart';
+import 'package:exquisssita_manager/features/loyalty/presentation/qr_scanner_view.dart';
 
 part 'app_router.g.dart';
 
@@ -70,8 +71,7 @@ GoRouter appRouter(Ref ref) {
           GoRoute(
             path: AppRoutes.loyaltyQr,
             name: 'loyalty_qr',
-            builder: (context, state) =>
-                const _PlaceholderScreen(title: 'Lealtad QR'),
+            builder: (context, state) => const QrScannerView(),
           ),
           GoRoute(
             path: AppRoutes.employees,
