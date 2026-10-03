@@ -82,6 +82,20 @@ class LocalPersistence {
     );
   }
 
+  Future<void> markSyncRetry({
+    required String id,
+    required int attempts,
+    required int now,
+    required String error,
+  }) => (_db.update(_db.syncQueueTable)..where((t) => t.id.equals(id))).write(
+    SyncQueueTableCompanion(
+      status: const Value(SyncStatus.pending),
+      attempts: Value(attempts + 1),
+      lastAttemptAt: Value(now),
+      errorMessage: Value(error),
+    ),
+  );
+
   /// Convierte un mapa de datos en payload determinista para la cola.
   static String encodePayload(Map<String, Object?> payload) =>
       jsonEncode(payload);
