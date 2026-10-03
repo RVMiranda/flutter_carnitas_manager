@@ -15,4 +15,19 @@ void main() {
     expect(summary.orderCount, 4);
     expect(summary.closed, isFalse);
   });
+
+  test('el cierre conserva la fecha del negocio y la hora de cierre', () {
+    final closure = CashRegisterClosure(
+      date: DateTime(2026, 10, 2),
+      cashCents: 100,
+      cardCents: 200,
+      otherCents: 0,
+      totalCents: 300,
+      orderCount: 2,
+      closedAt: DateTime(2026, 10, 2, 22),
+    );
+    expect(closure.date.day, 2);
+    expect(closure.closedAt.hour, 22);
+    expect(closure.totalCents, 300);
+  });
 }

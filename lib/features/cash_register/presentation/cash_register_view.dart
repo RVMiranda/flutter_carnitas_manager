@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../data/cash_register_providers.dart';
 
 class CashRegisterView extends ConsumerWidget {
@@ -76,6 +77,44 @@ class CashRegisterView extends ConsumerWidget {
               label: Text(
                 summary.closed ? 'Corte realizado' : 'Realizar corte',
               ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Cortes anteriores',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Consumer(
+              builder: (context, ref, _) => ref
+                  .watch(cashRegisterClosuresProvider)
+                  .when(
+                    loading: () => const LinearProgressIndicator(),
+                    error: (_, _) => const Text(
+                      'No fue posible cargar el historial.',
+                    ),
+                    data: (closures) => closures.isEmpty
+                        ? const Text('Aún no hay cortes registrados.')
+                        : Column(
+                            children: closures.take(10).map((closure) {
+                              final date = DateFormat(
+                                'dd/MM/yyyy',
+                              ).format(closure.date);
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(
+                                  Icons.receipt_long_outlined,
+                                ),
+                                title: Text(date),
+                                subtitle: Text(
+                                  '${closure.orderCount} órdenes',
+                                ),
+                                trailing: Text(
+                                  '\$${(closure.totalCents / 100).toStringAsFixed(2)}',
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                  ),
             ),
           ],
         ),

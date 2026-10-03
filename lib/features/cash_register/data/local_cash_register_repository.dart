@@ -55,6 +55,33 @@ class LocalCashRegisterRepository implements CashRegisterRepository {
   }
 
   @override
+  Stream<List<CashRegisterClosure>> watchClosures() async* {
+    Future<List<CashRegisterClosure>> read() async {
+      final rows = await (_database.select(_database.ventaDiariaTable)
+            ..orderBy([(v) => OrderingTerm.desc(v.fecha)]))
+          .get();
+      return rows
+          .map(
+            (row) => CashRegisterClosure(
+              date: DateTime.parse(row.fecha),
+              cashCents: row.totalEfectivoCentavos,
+              cardCents: row.totalTarjetaCentavos,
+              otherCents: row.totalOtroCentavos,
+              totalCents: row.totalGlobalCentavos,
+              orderCount: row.numOrdenes,
+              closedAt: DateTime.fromMillisecondsSinceEpoch(row.horaCierre),
+            ),
+          )
+          .toList(growable: false);
+    }
+
+    yield await read();
+    await for (final _ in _database.select(_database.ventaDiariaTable).watch()) {
+      yield await read();
+    }
+  }
+
+  @override
   Future<CashRegisterSummary> close(DateTime date) async {
     final summary = await _buildSummary(date);
     if (summary.closed) return summary;

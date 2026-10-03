@@ -13,3 +13,7 @@ CashRegisterRepository cashRegisterRepository(Ref ref) =>
 @riverpod
 Stream<CashRegisterSummary> cashRegisterSummary(Ref ref, DateTime date) =>
     ref.watch(cashRegisterRepositoryProvider).watchSummary(date);
+
+final cashRegisterClosuresProvider = StreamProvider<List<CashRegisterClosure>>(
+  (ref) => ref.watch(cashRegisterRepositoryProvider).watchClosures(),
+);
