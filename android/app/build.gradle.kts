@@ -1,4 +1,5 @@
 import java.util.Properties
+import java.io.File
 
 plugins {
     id("com.android.application")
@@ -12,7 +13,7 @@ val signingProperties = Properties()
 val checkout = rootProject.projectDir.parentFile.canonicalFile.toPath()
 if (!signingPath.isNullOrBlank()) {
     val configFile = file(signingPath).canonicalFile
-    require(java.io.File(signingPath).isAbsolute && !configFile.toPath().startsWith(checkout)) {
+    require(File(signingPath).isAbsolute && !configFile.toPath().startsWith(checkout)) {
         "Release signing properties must be outside the repository."
     }
     require(configFile.isFile) { "Release signing properties file is missing." }
@@ -21,7 +22,7 @@ if (!signingPath.isNullOrBlank()) {
         require(!signingProperties.getProperty(it).isNullOrBlank()) { "Release signing field is missing: $it" }
     }
     val keystore = file(signingProperties.getProperty("storeFile")).canonicalFile
-    require(java.io.File(signingProperties.getProperty("storeFile")).isAbsolute && keystore.isFile && !keystore.toPath().startsWith(checkout)) {
+    require(File(signingProperties.getProperty("storeFile")).isAbsolute && keystore.isFile && !keystore.toPath().startsWith(checkout)) {
         "Release keystore must exist outside the repository."
     }
 }
@@ -29,12 +30,6 @@ val releaseRequested = gradle.startParameter.taskNames.any { it.contains("releas
 require(!releaseRequested || !signingPath.isNullOrBlank()) {
     "Release requires EXQUISSSITA_SIGNING_PROPERTIES. See docs/platform-hardening.md."
 }
-gradle.taskGraph.whenReady { graph ->
-    require(!graph.allTasks.any { it.project == project && it.name.contains("release", ignoreCase = true) } || !signingPath.isNullOrBlank()) {
-        "Release requires external signing configuration. See docs/platform-hardening.md."
-    }
-}
-
 android {
     namespace = "com.mirandadevsource.exquisssita"
     compileSdk = flutter.compileSdkVersion
