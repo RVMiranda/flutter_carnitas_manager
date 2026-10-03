@@ -7,6 +7,7 @@ import 'package:exquisssita_manager/features/auth/presentation/views/login_view.
 import 'package:exquisssita_manager/features/auth/presentation/view_models/auth_vm.dart';
 import 'package:exquisssita_manager/shared/navigation/main_shell.dart';
 import 'package:exquisssita_manager/features/loyalty/presentation/qr_scanner_view.dart';
+import 'package:exquisssita_manager/features/promotions/presentation/promotions_view.dart';
 
 part 'app_router.g.dart';
 
@@ -82,8 +83,7 @@ GoRouter appRouter(Ref ref) {
           GoRoute(
             path: AppRoutes.promotions,
             name: 'promotions',
-            builder: (context, state) =>
-                const _PlaceholderScreen(title: 'Promociones'),
+            builder: (context, state) => const PromotionsView(),
           ),
         ],
       ),
