@@ -28,5 +28,22 @@ final appDatabaseProvider = Provider<AppDatabase>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AppDatabaseRef = ProviderRef<AppDatabase>;
+String _$localPersistenceHash() => r'cbcce8292e9418e4bf3b68e266be8a14680a51a5';
+
+/// See also [localPersistence].
+@ProviderFor(localPersistence)
+final localPersistenceProvider = Provider<LocalPersistence>.internal(
+  localPersistence,
+  name: r'localPersistenceProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$localPersistenceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef LocalPersistenceRef = ProviderRef<LocalPersistence>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

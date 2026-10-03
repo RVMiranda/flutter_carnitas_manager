@@ -1,68 +1,99 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:exquisssita_manager/core/connectivity/connectivity_service.dart';
 import 'package:exquisssita_manager/core/logging/app_logger.dart';
+import 'package:exquisssita_manager/data/local/database/database_provider.dart';
+import 'package:exquisssita_manager/data/local/database/app_database.dart';
+import 'package:exquisssita_manager/data/local/database/local_persistence.dart';
+import 'package:exquisssita_manager/data/repositories/sync_repository.dart';
+import 'package:exquisssita_manager/data/remote/remote_providers.dart';
 
 part 'sync_worker.g.dart';
 
-/// Worker de sincronización offline → Supabase.
-///
-/// Escucha cambios de conectividad y procesa la [SyncQueueTable]
-/// cuando el dispositivo vuelve a tener acceso a internet.
-///
-/// TODO (Fase 2): Implementar el procesamiento real de la cola.
-/// Por ahora solo loguea los eventos de conectividad.
 class SyncWorker {
-  SyncWorker(this._connectivityService);
-
-  final ConnectivityService _connectivityService;
+  SyncWorker(this._connectivity, this._local, this._repository, this._client);
+  final ConnectivityService _connectivity;
+  final LocalPersistence _local;
+  final SyncRepository _repository;
+  final SupabaseClient _client;
   StreamSubscription<ConnectivityStatus>? _subscription;
   bool _isSyncing = false;
 
-  /// Inicia el worker. Debe llamarse una vez al arrancar la app.
   void start() {
     AppLogger.info('SyncWorker iniciado', tag: 'Sync');
-    _subscription = _connectivityService.statusStream.listen(
-      _onConnectivityChanged,
-    );
+    _subscription = _connectivity.statusStream.listen((status) {
+      if (status == ConnectivityStatus.online) unawaited(syncNow());
+    });
+    if (_connectivity.isOnline) unawaited(syncNow());
   }
 
-  void _onConnectivityChanged(ConnectivityStatus status) {
-    AppLogger.info('Conectividad: ${status.name}', tag: 'Sync');
-
-    if (status == ConnectivityStatus.online && !_isSyncing) {
-      _processPendingOperations();
+  Future<void> syncNow() async {
+    if (_isSyncing ||
+        !_connectivity.isOnline ||
+        _client.auth.currentSession == null) {
+      return;
     }
-  }
-
-  Future<void> _processPendingOperations() async {
-    if (_isSyncing) return;
     _isSyncing = true;
-
+    _connectivity.setStatus(ConnectivityStatus.syncing);
     try {
-      AppLogger.info('Procesando operaciones pendientes...', tag: 'Sync');
-      // TODO (Fase 2): Implementar procesamiento real de sync_queue
-      // 1. Obtener operaciones con status = 'pending' ORDER BY created_at ASC
-      // 2. Para cada operación: ejecutar en Supabase con idempotency_key
-      // 3. Marcar como 'completed' o incrementar attempts
-      // 4. Aplicar backoff exponencial en fallos temporales
-      AppLogger.info('Sincronización completada (placeholder)', tag: 'Sync');
-    } catch (e, st) {
+      for (final operation in await _local.pendingSyncBatch(
+        now: DateTime.now().millisecondsSinceEpoch,
+      )) {
+        await _process(operation);
+      }
+      _connectivity.setStatus(ConnectivityStatus.online);
+    } catch (error, stackTrace) {
       AppLogger.error(
-        'Error en sincronización',
+        'Sincronización interrumpida',
         tag: 'Sync',
-        error: e,
-        stackTrace: st,
+        error: error,
+        stackTrace: stackTrace,
       );
+      _connectivity.setStatus(ConnectivityStatus.syncError);
     } finally {
       _isSyncing = false;
     }
   }
 
-  /// Detiene el worker y libera recursos.
+  Future<void> _process(SyncQueueTableData operation) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _local.markSyncProcessing(operation.id, now);
+    try {
+      await _repository.push(operation);
+      await _local.markSyncCompleted(operation.id);
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        'Falló operación ${operation.id}',
+        tag: 'Sync',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (_isRetryable(error) && operation.attempts < 8) {
+        await _local.markSyncRetry(
+          id: operation.id,
+          attempts: operation.attempts,
+          now: now,
+          error: error.toString(),
+        );
+      } else {
+        await _local.markSyncFailed(operation.id, error.toString(), now);
+      }
+    }
+  }
+
+  bool _isRetryable(Object error) {
+    if (error is PostgrestException) {
+      final code = error.code;
+      return code == '408' || code == '429' || (code?.startsWith('5') ?? false);
+    }
+    return error is TimeoutException || error is SocketException;
+  }
+
   void dispose() {
     _subscription?.cancel();
     AppLogger.info('SyncWorker detenido', tag: 'Sync');
@@ -71,8 +102,12 @@ class SyncWorker {
 
 @Riverpod(keepAlive: true)
 SyncWorker syncWorker(Ref ref) {
-  final connectivity = ref.watch(connectivityServiceProvider);
-  final worker = SyncWorker(connectivity);
+  final worker = SyncWorker(
+    ref.watch(connectivityServiceProvider),
+    ref.watch(localPersistenceProvider),
+    SupabaseSyncRepository(ref.watch(supabaseDataSourceProvider)),
+    Supabase.instance.client,
+  );
   worker.start();
   ref.onDispose(worker.dispose);
   return worker;

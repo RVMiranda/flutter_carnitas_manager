@@ -27,13 +27,18 @@ part 'app_database.g.dart';
     MovimientosInventarioTable,
     VisitasClientesTable,
     AuditoriaEventosTable,
+    EmpleadosTable,
+    PromocionesTable,
+    VentaDiariaTable,
+    HistorialPagosEmpleadosTable,
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase({String name = 'exquisssita_manager', QueryExecutor? executor})
+    : super(executor ?? _openConnection(name));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,10 +49,16 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createAll();
       }
+      if (from < 3) {
+        await m.createTable(empleadosTable);
+        await m.createTable(promocionesTable);
+        await m.createTable(ventaDiariaTable);
+        await m.createTable(historialPagosEmpleadosTable);
+      }
     },
   );
 
-  static QueryExecutor _openConnection() {
-    return driftDatabase(name: 'exquisssita_manager');
+  static QueryExecutor _openConnection(String name) {
+    return driftDatabase(name: name);
   }
 }
