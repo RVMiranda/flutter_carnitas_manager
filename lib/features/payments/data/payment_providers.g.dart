@@ -25,6 +25,23 @@ final paymentPreviewRepositoryProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PaymentPreviewRepositoryRef = ProviderRef<PaymentPreviewRepository>;
+String _$paymentRepositoryHash() => r'b1dce5ea88f56fc7c2b1e39f558dbf0cb6b585dd';
+
+/// See also [paymentRepository].
+@ProviderFor(paymentRepository)
+final paymentRepositoryProvider = Provider<PaymentRepository>.internal(
+  paymentRepository,
+  name: r'paymentRepositoryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$paymentRepositoryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PaymentRepositoryRef = ProviderRef<PaymentRepository>;
 String _$paymentPreviewHash() => r'a9ba3c833a24b752e700dccc71db29cbf4fd6a1c';
 
 /// Copied from Dart SDK

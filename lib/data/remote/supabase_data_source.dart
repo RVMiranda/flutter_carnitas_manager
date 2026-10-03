@@ -26,6 +26,10 @@ class SupabaseDataSource {
     required Map<String, dynamic> payload,
     required String entityId,
   }) async {
+    if (entity == 'registrar_pago') {
+      await _client.rpc('registrar_pago', params: payload);
+      return;
+    }
     if (!_allowedTables.contains(entity)) {
       throw ArgumentError('Entidad no permitida para sincronización: $entity');
     }
