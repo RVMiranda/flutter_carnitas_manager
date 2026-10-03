@@ -4,6 +4,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import '../tables/sync_queue_table.dart';
 import '../tables/mesas_table.dart';
 import '../tables/business_tables.dart';
+import '../../sync/sync_schema.dart';
 
 part 'app_database.g.dart';
 
@@ -12,7 +13,7 @@ part 'app_database.g.dart';
 /// Es la fuente de verdad local. La UI siempre lee desde aquí.
 /// Supabase se sincroniza en background mediante [SyncWorker].
 ///
-/// Versión actual del schema: 4.
+/// Versión actual del schema: 6.
 /// Las migraciones son incrementales y conservan las bases existentes.
 @DriftDatabase(
   tables: [
@@ -38,12 +39,17 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? _openConnection(name));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
+      await customStatement(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_ordenes_una_abierta_mesa "
+        "ON ordenes (mesa_id) WHERE estado = 'Abierta' AND mesa_id IS NOT NULL",
+      );
+      await createSyncSchema(this);
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
@@ -69,14 +75,19 @@ class AppDatabase extends _$AppDatabase {
         final clientesColumns = await customSelect(
           'PRAGMA table_info(clientes)',
         ).get();
-        if (!clientesColumns.any((row) => row.data['name'] == 'qr_token_hash')) {
+        if (!clientesColumns.any(
+          (row) => row.data['name'] == 'qr_token_hash',
+        )) {
           await m.addColumn(clientesTable, clientesTable.qrTokenHash);
         }
         final visitasColumns = await customSelect(
           'PRAGMA table_info(visitas_clientes)',
         ).get();
         if (!visitasColumns.any((row) => row.data['name'] == 'usuario_id')) {
-          await m.addColumn(visitasClientesTable, visitasClientesTable.usuarioId);
+          await m.addColumn(
+            visitasClientesTable,
+            visitasClientesTable.usuarioId,
+          );
         }
       }
       await customStatement(
@@ -102,6 +113,23 @@ class AppDatabase extends _$AppDatabase {
       await customStatement(
         'CREATE INDEX IF NOT EXISTS idx_venta_diaria_fecha '
         'ON venta_diaria (fecha)',
+      );
+      await customStatement(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_ordenes_una_abierta_mesa "
+        "ON ordenes (mesa_id) WHERE estado = 'Abierta' AND mesa_id IS NOT NULL",
+      );
+      if (from >= 2 && from < 5) {
+        // Drift's documented copy/recreate API is needed to change CHECKs
+        // without deleting rows. Pinned drift 2.28 supports TableMigration.
+        // ignore: experimental_member_use
+        await m.alterTable(TableMigration(movimientosInventarioTable));
+        // ignore: experimental_member_use
+        await m.alterTable(TableMigration(ordenesTable));
+      }
+      await createSyncSchema(this);
+      // Old worker stored raw errors. Do not retain credentials/payload echoes.
+      await customStatement(
+        "UPDATE sync_queue SET error_message = 'operation_requires_review' WHERE error_message IS NOT NULL",
       );
     },
   );

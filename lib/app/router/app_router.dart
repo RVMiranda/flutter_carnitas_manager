@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import '../../shared/widgets/design_gallery.dart';
+import '../../shared/widgets/exquisssita_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -9,6 +12,7 @@ import 'package:exquisssita_manager/shared/navigation/main_shell.dart';
 import 'package:exquisssita_manager/features/loyalty/presentation/qr_scanner_view.dart';
 import 'package:exquisssita_manager/features/promotions/presentation/promotions_view.dart';
 import 'package:exquisssita_manager/features/cash_register/presentation/cash_register_view.dart';
+import 'package:exquisssita_manager/features/orders/presentation/orders_view.dart';
 
 part 'app_router.g.dart';
 
@@ -23,6 +27,7 @@ abstract final class AppRoutes {
   static const promotions = '/promotions';
   static const cashRegister = '/cash-register';
   static const settings = '/settings';
+  static const designGallery = '/design-gallery';
 }
 
 @riverpod
@@ -61,8 +66,7 @@ GoRouter appRouter(Ref ref) {
           GoRoute(
             path: AppRoutes.salon,
             name: 'salon',
-            builder: (context, state) =>
-                const _PlaceholderScreen(title: 'Salón'),
+            builder: (context, state) => const OrdersView(),
           ),
           GoRoute(
             path: AppRoutes.inventory,
@@ -88,14 +92,21 @@ GoRouter appRouter(Ref ref) {
           ),
         ],
       ),
+      if (kDebugMode)
+        GoRoute(
+          path: AppRoutes.designGallery,
+          builder: (_, _) => const DesignGalleryView(),
+        ),
       GoRoute(
         path: AppRoutes.cashRegister,
         name: 'cash_register',
         builder: (context, state) => const CashRegisterView(),
       ),
     ],
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(child: Text('Ruta no encontrada: ${state.error}')),
+    errorBuilder: (context, state) => const Scaffold(
+      body: Center(
+        child: ExquisssitaErrorState(message: 'No se encontró esta pantalla.'),
+      ),
     ),
   );
 }
@@ -108,8 +119,13 @@ class _PlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(title, style: Theme.of(context).textTheme.displayMedium),
+    return ListView(
+      children: [
+        ExquisssitaPageHeader(title: title),
+        const ExquisssitaEmptyState(
+          message: 'Este módulo está en preparación.',
+        ),
+      ],
     );
   }
 }
