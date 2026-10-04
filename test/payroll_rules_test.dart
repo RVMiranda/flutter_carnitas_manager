@@ -4,14 +4,17 @@ import 'package:exquisssita_manager/features/employees/domain/payroll_models.dar
 
 void main() {
   group('PayrollRules', () {
-    test('adjusts day 31 in February and short months', () {
-      expect(PayrollRules.effectivePayDate(DateTime(2028, 2), 31), DateTime(2028, 2, 29));
-      expect(PayrollRules.effectivePayDate(DateTime(2027, 4), 31), DateTime(2027, 4, 30));
+    test('recognizes weekly paydays from Monday to Sunday', () {
+      expect(PayrollRules.isPayDay(DateTime(2026, 10, 5), 1), isTrue);
+      expect(PayrollRules.isPayDay(DateTime(2026, 10, 5), 7), isFalse);
     });
     test('validates salary and pay day', () {
       expect(PayrollRules.salary('-1'), isNotNull);
       expect(PayrollRules.payDay('0'), isNotNull);
-      expect(PayrollRules.payDay('31'), isNull);
+      expect(PayrollRules.salary('1000'), isNull);
+      expect(PayrollRules.salary('1000.50'), isNull);
+      expect(PayrollRules.payDay('7'), isNull);
+      expect(PayrollRules.payDay('8'), isNotNull);
     });
     test('authorization follows employee management permission', () {
       expect(PayrollRules.canManage(AppRole.admin), isTrue);

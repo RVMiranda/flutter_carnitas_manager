@@ -64,7 +64,7 @@ class EmployeeViewModel extends StateNotifier<EmployeeUiState> {
     try {
       await repo.registerPayment(
         e.id,
-        PayrollRules.effectivePayDate(date, e.diaPago),
+        date,
         notes,
       );
     } catch (x) {

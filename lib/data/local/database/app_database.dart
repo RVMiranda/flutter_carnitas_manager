@@ -13,7 +13,7 @@ part 'app_database.g.dart';
 /// Es la fuente de verdad local. La UI siempre lee desde aquí.
 /// Supabase se sincroniza en background mediante [SyncWorker].
 ///
-/// Versión actual del schema: 6.
+/// Versión actual del schema: 7.
 /// Las migraciones son incrementales y conservan las bases existentes.
 @DriftDatabase(
   tables: [
@@ -39,7 +39,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? _openConnection(name));
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -125,6 +125,16 @@ class AppDatabase extends _$AppDatabase {
         await m.alterTable(TableMigration(movimientosInventarioTable));
         // ignore: experimental_member_use
         await m.alterTable(TableMigration(ordenesTable));
+      }
+      if (from < 7) {
+        // El día de pago pasó de día del mes (1-31) a día semanal (1-7).
+        // Los valores históricos fuera del nuevo rango se normalizan al
+        // domingo para conservar los empleados sin borrar datos.
+        await customStatement(
+          'UPDATE empleados SET dia_pago = 7 WHERE dia_pago < 1 OR dia_pago > 7',
+        );
+        // ignore: experimental_member_use
+        await m.alterTable(TableMigration(empleadosTable));
       }
       await createSyncSchema(this);
       // Old worker stored raw errors. Do not retain credentials/payload echoes.

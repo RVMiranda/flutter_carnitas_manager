@@ -193,7 +193,7 @@ class EmpleadosTable extends Table {
   @override
   List<String> get customConstraints => [
     'CHECK (salario_centavos >= 0)',
-    'CHECK (dia_pago BETWEEN 1 AND 31)',
+    'CHECK (dia_pago BETWEEN 1 AND 7)',
   ];
 }
 

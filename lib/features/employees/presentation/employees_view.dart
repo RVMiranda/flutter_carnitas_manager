@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:exquisssita_manager/data/local/database/app_database.dart';
+import 'package:exquisssita_manager/core/utils/currency_utils.dart';
 import 'package:exquisssita_manager/features/auth/presentation/view_models/auth_vm.dart';
 import '../domain/payroll_models.dart';
 import 'employee_view_model.dart';
@@ -54,11 +55,7 @@ class _EmployeesContentState extends ConsumerState<_EmployeesContent> {
     final vm = ref.read(employeeViewModelProvider(widget.role).notifier);
     final today = DateTime.now();
     final due = state.employees.where((e) {
-      final date = PayrollRules.effectivePayDate(today, e.diaPago);
-      return e.activo &&
-          date.year == today.year &&
-          date.month == today.month &&
-          date.day == today.day;
+      return e.activo && PayrollRules.isPayDay(today, e.diaPago);
     }).toList();
     return Scaffold(
       body: SafeArea(
@@ -107,7 +104,7 @@ class _EmployeesContentState extends ConsumerState<_EmployeesContent> {
                               '${employee.nombre} ${employee.apellido}',
                             ),
                             subtitle: Text(
-                              'Día ${employee.diaPago} · ${employee.salarioCentavos} centavos · ${employee.activo ? 'Activo' : 'Inactivo'}',
+                              '${_weekdayName(employee.diaPago)} · ${CurrencyUtils.format(employee.salarioCentavos)} · ${employee.activo ? 'Activo' : 'Inactivo'}',
                             ),
                             trailing: employee.activo
                                 ? TextButton(
@@ -186,17 +183,15 @@ class _EmployeesContentState extends ConsumerState<_EmployeesContent> {
                 ),
                 TextFormField(
                   controller: _salary,
-                  decoration: const InputDecoration(
-                    labelText: 'Salario en centavos',
-                  ),
-                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Salario semanal (pesos)', helperText: 'Ejemplo: 1000 o 1000.50'),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   validator: PayrollRules.salary,
                 ),
-                TextFormField(
-                  controller: _day,
-                  decoration: const InputDecoration(labelText: 'Día de pago'),
-                  keyboardType: TextInputType.number,
-                  validator: PayrollRules.payDay,
+                DropdownButtonFormField<int>(
+                  initialValue: 1,
+                  decoration: const InputDecoration(labelText: 'Día de pago semanal'),
+                  items: const [DropdownMenuItem(value: 1, child: Text('Lunes')), DropdownMenuItem(value: 2, child: Text('Martes')), DropdownMenuItem(value: 3, child: Text('Miércoles')), DropdownMenuItem(value: 4, child: Text('Jueves')), DropdownMenuItem(value: 5, child: Text('Viernes')), DropdownMenuItem(value: 6, child: Text('Sábado')), DropdownMenuItem(value: 7, child: Text('Domingo'))],
+                  onChanged: (value) => _day.text = '${value ?? 1}',
                 ),
               ],
             ),
@@ -215,8 +210,8 @@ class _EmployeesContentState extends ConsumerState<_EmployeesContent> {
                   firstName: _first.text,
                   lastName: _last.text,
                   phone: _phone.text,
-                  salaryCents: int.parse(_salary.text),
-                  payDay: int.parse(_day.text),
+                  salaryPesos: _salary.text,
+                  payDay: int.tryParse(_day.text) ?? 1,
                   active: true,
                 ),
               );
@@ -228,4 +223,6 @@ class _EmployeesContentState extends ConsumerState<_EmployeesContent> {
       ),
     );
   }
+
+  String _weekdayName(int day) => const ['?', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'][day.clamp(1, 7)];
 }
