@@ -88,8 +88,15 @@ class LocalPromotionRepository implements PromotionRepository {
     Map<String, Object?> payload,
     int now, {
     required String operation,
-  }) =>
-      _database
+  }) async {
+    // Promociones son snapshots reemplazables: evita que una edición nueva
+    // quede detrás de un INSERT antiguo pendiente en el dispositivo.
+    await (_database.delete(_database.syncQueueTable)
+          ..where((q) => q.entity.equals('promociones'))
+          ..where((q) => q.entityId.equals(id))
+          ..where((q) => q.status.equals(SyncStatus.pending)))
+        .go();
+    await _database
           .into(_database.syncQueueTable)
           .insert(
             SyncQueueTableCompanion.insert(
@@ -102,4 +109,5 @@ class LocalPromotionRepository implements PromotionRepository {
               createdAt: now,
             ),
           );
+  }
 }
