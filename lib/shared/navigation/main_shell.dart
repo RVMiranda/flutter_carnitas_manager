@@ -10,7 +10,6 @@ import 'package:exquisssita_manager/shared/widgets/exquisssita_components.dart';
 import 'package:exquisssita_manager/features/auth/presentation/view_models/auth_vm.dart';
 import 'package:exquisssita_manager/shared/navigation/settings_bottom_sheet.dart';
 import 'package:exquisssita_manager/app/theme/theme_controller.dart';
-import 'package:exquisssita_manager/shared/widgets/sync_status_banner.dart';
 
 /// Shell principal que envuelve todas las pantallas con:
 /// - Top bar (fecha + nombre del empleado + acciones)
