@@ -58,7 +58,6 @@ class _ShellContent extends StatelessWidget {
         onSettingsTap: onSettingsTap,
         onThemeToggle: onThemeToggle,
       ),
-      const SyncStatusBanner(),
       Expanded(
         child: SafeArea(
           top: false,
@@ -144,7 +143,6 @@ class _BrandSidebar extends StatelessWidget {
                 title: Text(userName, overflow: TextOverflow.ellipsis),
                 subtitle: Text(roleLabel),
               ),
-              const SyncStatusBanner(),
               IconButton(
                 key: const ValueKey('sidebar-settings'),
                 tooltip: 'Configuración',

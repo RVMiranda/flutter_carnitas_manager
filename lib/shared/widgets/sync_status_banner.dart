@@ -19,7 +19,7 @@ class SyncStatusBanner extends ConsumerWidget {
     final actionable = critical.where((operation) =>
         !operation.acknowledged &&
         operation.state != CriticalOperationState.confirmed).toList();
-    if (actionable.isEmpty && state.status != ConnectivityStatus.syncError) {
+    if (actionable.isEmpty) {
       return const SizedBox.shrink();
     }
     final label = switch (state.status) {
