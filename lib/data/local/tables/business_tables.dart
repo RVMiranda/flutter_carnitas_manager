@@ -19,6 +19,7 @@ class ClientesTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(name: 'productos_activo_nombre', columns: {#activo, #nombre})
 class ProductosTable extends Table {
   @override
   String get tableName => 'productos';
@@ -35,8 +36,15 @@ class ProductosTable extends Table {
   IntColumn get updatedAt => integer()();
   @override
   Set<Column> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK (precio_centavos >= 0)',
+    'CHECK (stock_actual >= 0)',
+    'CHECK (stock_minimo >= 0)',
+  ];
 }
 
+@TableIndex(name: 'ordenes_estado_apertura', columns: {#estado, #fechaApertura})
 class OrdenesTable extends Table {
   @override
   String get tableName => 'ordenes';
@@ -52,8 +60,13 @@ class OrdenesTable extends Table {
   IntColumn get updatedAt => integer()();
   @override
   Set<Column> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    "CHECK (tipo_servicio IN ('Mesa', 'Para llevar', 'Domicilio'))",
+  ];
 }
 
+@TableIndex(name: 'detalle_orden_orden', columns: {#ordenId})
 class DetalleOrdenTable extends Table {
   @override
   String get tableName => 'detalle_orden';
@@ -69,8 +82,14 @@ class DetalleOrdenTable extends Table {
   IntColumn get updatedAt => integer()();
   @override
   Set<Column> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK (cantidad > 0)',
+    'CHECK (precio_unitario_centavos >= 0)',
+  ];
 }
 
+@TableIndex(name: 'transacciones_fecha', columns: {#fecha})
 class TransaccionesTable extends Table {
   @override
   String get tableName => 'transacciones';
@@ -83,6 +102,8 @@ class TransaccionesTable extends Table {
   IntColumn get createdAt => integer()();
   @override
   Set<Column> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => ['CHECK (monto_centavos > 0)'];
 }
 
 class PagoDetallesTable extends Table {
@@ -96,6 +117,11 @@ class PagoDetallesTable extends Table {
   IntColumn get createdAt => integer()();
   @override
   Set<Column> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK (cantidad > 0)',
+    'CHECK (monto_centavos > 0)',
+  ];
 }
 
 class MovimientosInventarioTable extends Table {
@@ -112,8 +138,11 @@ class MovimientosInventarioTable extends Table {
   TextColumn get idempotencyKey => text().unique()();
   @override
   Set<Column> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => ['CHECK (cantidad <> 0)'];
 }
 
+@TableIndex(name: 'visitas_usuario_fecha', columns: {#usuarioId, #fecha})
 class VisitasClientesTable extends Table {
   @override
   String get tableName => 'visitas_clientes';
@@ -126,6 +155,8 @@ class VisitasClientesTable extends Table {
   IntColumn get createdAt => integer()();
   @override
   Set<Column> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => ['CHECK (puntos_otorgados >= 0)'];
 }
 
 class AuditoriaEventosTable extends Table {
@@ -159,6 +190,11 @@ class EmpleadosTable extends Table {
   IntColumn get updatedAt => integer()();
   @override
   Set<Column> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK (salario_centavos >= 0)',
+    'CHECK (dia_pago BETWEEN 1 AND 7)',
+  ];
 }
 
 class PromocionesTable extends Table {
@@ -193,6 +229,14 @@ class VentaDiariaTable extends Table {
   TextColumn get cerradoPor => text().nullable()();
   @override
   Set<Column> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK (total_efectivo_centavos >= 0)',
+    'CHECK (total_tarjeta_centavos >= 0)',
+    'CHECK (total_otro_centavos >= 0)',
+    'CHECK (total_global_centavos >= 0)',
+    'CHECK (num_ordenes >= 0)',
+  ];
 }
 
 class HistorialPagosEmpleadosTable extends Table {
@@ -202,6 +246,8 @@ class HistorialPagosEmpleadosTable extends Table {
   TextColumn get empleadoId => text()();
   IntColumn get montoCentavos => integer()();
   TextColumn get fechaPago => text()();
+  TextColumn get periodoInicio => text().nullable()();
+  TextColumn get fechaProgramada => text().nullable()();
   TextColumn get notas => text().nullable()();
   IntColumn get createdAt => integer()();
   @override

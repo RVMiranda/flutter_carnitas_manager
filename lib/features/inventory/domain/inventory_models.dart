@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import '../../../core/utils/currency_utils.dart';
 
 enum InventoryMovementType { entry, sale, adjustment, cancellation, waste }
 
@@ -19,6 +20,7 @@ class InventoryMovementRequest {
     required this.type,
     this.referenceId,
     this.notes,
+    this.expectedVersion,
     String? idempotencyKey,
   }) : idempotencyKey = idempotencyKey ?? const Uuid().v4();
 
@@ -27,6 +29,7 @@ class InventoryMovementRequest {
   final InventoryMovementType type;
   final String? referenceId;
   final String? notes;
+  final int? expectedVersion;
   final String idempotencyKey;
 
   Map<String, Object?> toRpcPayload() => {
@@ -36,6 +39,7 @@ class InventoryMovementRequest {
     'p_idempotency_key': idempotencyKey,
     'p_referencia_id': referenceId,
     'p_notas': notes,
+    if (expectedVersion != null) 'p_expected_version': expectedVersion,
   };
 }
 
@@ -44,6 +48,62 @@ class InventoryValidationException implements Exception {
   final String message;
   @override
   String toString() => message;
+}
+
+class ProductDraft {
+  const ProductDraft({
+    this.id,
+    required this.name,
+    required this.priceCents,
+    required this.category,
+    required this.tracksInventory,
+    required this.minimumStock,
+    this.initialStock = 0,
+  });
+  final String? id;
+  final String name;
+  final int priceCents;
+  final String category;
+  final bool tracksInventory;
+  final int minimumStock;
+  final int initialStock;
+}
+
+enum InventorySyncStatus { synced, pendingSync, rejected, requiresReview }
+
+class InventoryCatalogItem {
+  const InventoryCatalogItem({
+    required this.product,
+    this.syncStatus = InventorySyncStatus.synced,
+  });
+  final Object product;
+  final InventorySyncStatus syncStatus;
+}
+
+class ProductFormRules {
+  const ProductFormRules._();
+  static String? name(String? value) => value == null || value.trim().length < 2
+      ? 'Escribe un nombre de al menos 2 caracteres.'
+      : null;
+  static String? category(String? value) =>
+      value == null || value.trim().isEmpty
+      ? 'Selecciona una categoría.'
+      : null;
+  static String? price(String? value) {
+    final parsed = int.tryParse((value ?? '').trim());
+    return parsed == null || parsed < 0 ? 'Precio inválido en centavos.' : null;
+  }
+
+  static String? pricePesos(String? value) =>
+      value == null || !CurrencyUtils.isValidPesos(value)
+      ? 'Precio inválido.'
+      : null;
+  static String? stock(String? value) {
+    final parsed = int.tryParse((value ?? '').trim());
+    return parsed == null || parsed < 0
+        ? 'Usa una cantidad entera no negativa.'
+        : null;
+  }
 }
 
 class InventoryRules {

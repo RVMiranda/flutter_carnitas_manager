@@ -1,5 +1,3 @@
-import 'package:intl/intl.dart';
-
 /// Utilidades para operaciones monetarias seguras.
 ///
 /// REGLA FUNDAMENTAL: Todos los valores monetarios se almacenan como
@@ -12,28 +10,41 @@ import 'package:intl/intl.dart';
 /// - Base de datos local (Drift: INTEGER)
 /// - Base de datos remota (Supabase: BIGINT)
 /// - Cálculos en Dart (int)
-/// - Presentación al usuario (formato con NumberFormat)
+/// - Presentación al usuario (formato decimal entero)
 abstract final class CurrencyUtils {
-  static final _formatter = NumberFormat.currency(
-    locale: 'es_MX',
-    symbol: '\$',
-    decimalDigits: 2,
-  );
+  /// Parses decimal input without floating point, rounding, or exponents.
+  static int pesosToCentavos(String pesos) {
+    final match = RegExp(
+      r'^(-?)(\d+)(?:[.,](\d{1,2}))?$',
+    ).firstMatch(pesos.trim());
+    if (match == null) throw const FormatException('Importe inválido.');
+    final cents = int.tryParse(
+      '${match[1]}${match[2]}${(match[3] ?? '').padRight(2, '0')}',
+    );
+    if (cents == null) throw const FormatException('Importe fuera de rango.');
+    return cents;
+  }
 
-  /// Convierte pesos (double del formulario) a centavos (int de almacenamiento).
-  ///
-  /// Ejemplo: 25.50 → 2550
-  static int pesosToCentavos(double pesos) => (pesos * 100).round();
-
-  /// Convierte centavos (int de almacenamiento) a pesos (double para display).
-  ///
-  /// Ejemplo: 2550 → 25.50
-  static double centavosToDouble(int centavos) => centavos / 100.0;
+  static bool isValidPesos(String pesos) {
+    try {
+      return pesosToCentavos(pesos) >= 0;
+    } on FormatException {
+      return false;
+    }
+  }
 
   /// Formatea centavos como string de moneda para mostrar al usuario.
   ///
   /// Ejemplo: 2550 → "\$25.50"
-  static String format(int centavos) => _formatter.format(centavos / 100.0);
+  static String format(int centavos) {
+    final text = centavos.toString();
+    final negative = text.startsWith('-');
+    final digits = (negative ? text.substring(1) : text).padLeft(3, '0');
+    final whole = digits
+        .substring(0, digits.length - 2)
+        .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
+    return '${negative ? '-' : ''}\$$whole.${digits.substring(digits.length - 2)}';
+  }
 
   /// Suma segura de una lista de valores en centavos.
   ///

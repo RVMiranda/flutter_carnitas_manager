@@ -49,3 +49,8 @@ app.*.map.json
 
 # Supabase CLI local state
 supabase/.temp/
+# Release signing secrets are supplied from outside the repository.
+**/*.jks
+**/*.keystore
+**/key.properties
+**/signing.properties

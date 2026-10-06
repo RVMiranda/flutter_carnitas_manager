@@ -32,6 +32,8 @@ class ConnectivityService {
   ConnectivityService(this._connectivity);
 
   final Connectivity _connectivity;
+  StreamSubscription<List<ConnectivityResult>>? _networkSubscription;
+  bool _initialized = false;
 
   ConnectivityStatus _current = ConnectivityStatus.unknown;
   ConnectivityStatus get current => _current;
@@ -42,11 +44,15 @@ class ConnectivityService {
   Stream<ConnectivityStatus> get statusStream => _controller.stream;
 
   void _init() {
+    if (_initialized) return;
+    _initialized = true;
     // Verificar estado inicial
     _connectivity.checkConnectivity().then(_onConnectivityChanged);
 
     // Escuchar cambios futuros
-    _connectivity.onConnectivityChanged.listen(_onConnectivityChanged);
+    _networkSubscription = _connectivity.onConnectivityChanged.listen(
+      _onConnectivityChanged,
+    );
   }
 
   void _onConnectivityChanged(List<ConnectivityResult> results) {
@@ -61,7 +67,7 @@ class ConnectivityService {
         ? ConnectivityStatus.online
         : ConnectivityStatus.offline;
 
-    if (newStatus != _current) {
+    if (!_controller.isClosed && newStatus != _current) {
       _current = newStatus;
       _controller.add(_current);
     }
@@ -77,6 +83,7 @@ class ConnectivityService {
   }
 
   void dispose() {
+    _networkSubscription?.cancel();
     _controller.close();
   }
 }

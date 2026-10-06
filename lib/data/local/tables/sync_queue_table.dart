@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+@TableIndex(name: 'sync_queue_status_created', columns: {#status, #createdAt})
 /// Tabla de cola de sincronización offline-first.
 ///
 /// Toda operación realizada sin conexión se registra aquí.
@@ -31,6 +32,13 @@ class SyncQueueTable extends Table {
   IntColumn get lastAttemptAt => integer().nullable()();
   TextColumn get status => text().withDefault(const Constant('pending'))();
   TextColumn get errorMessage => text().nullable()();
+
+  @override
+  List<String> get customConstraints => [
+    'CHECK (attempts >= 0)',
+    "CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE'))",
+    "CHECK (status IN ('pending', 'processing', 'completed', 'failed'))",
+  ];
 
   @override
   Set<Column> get primaryKey => {id};

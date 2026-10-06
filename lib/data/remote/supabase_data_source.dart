@@ -35,7 +35,8 @@ class SupabaseDataSource {
     required String entityId,
   }) async {
     if (entity == 'registrar_pago' ||
-        entity == 'registrar_movimiento_inventario') {
+        entity == 'registrar_movimiento_inventario' ||
+        entity == 'realizar_corte_caja_seguro') {
       await _client.rpc(entity, params: payload);
       return;
     }

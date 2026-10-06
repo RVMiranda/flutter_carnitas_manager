@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+@TableIndex(name: 'mesas_estado_numero', columns: {#estado, #numeroMesa})
 /// Tabla de mesas en la base de datos local.
 ///
 /// Replica la estructura de la tabla `mesas` en Supabase.
@@ -18,6 +19,11 @@ class MesasTable extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    "CHECK (estado IN ('Libre', 'Ocupada', 'Reservada'))",
+  ];
 }
 
 /// Estados válidos de una mesa.
