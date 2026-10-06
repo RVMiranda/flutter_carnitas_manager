@@ -13,7 +13,7 @@ part 'app_database.g.dart';
 /// Es la fuente de verdad local. La UI siempre lee desde aquí.
 /// Supabase se sincroniza en background mediante [SyncWorker].
 ///
-/// Versión actual del schema: 7.
+/// Versión actual del schema: 8.
 /// Las migraciones son incrementales y conservan las bases existentes.
 @DriftDatabase(
   tables: [
@@ -39,12 +39,17 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? _openConnection(name));
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
+      await customStatement(
+        'CREATE UNIQUE INDEX IF NOT EXISTS historial_pagos_empleado_periodo_unique '
+        'ON historial_pagos_empleados (empleado_id, periodo_inicio) '
+        'WHERE periodo_inicio IS NOT NULL',
+      );
       await customStatement(
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_ordenes_una_abierta_mesa "
         "ON ordenes (mesa_id) WHERE estado = 'Abierta' AND mesa_id IS NOT NULL",
@@ -136,6 +141,32 @@ class AppDatabase extends _$AppDatabase {
         // ignore: experimental_member_use
         await m.alterTable(TableMigration(empleadosTable));
       }
+      if (from < 8) {
+        final paymentColumns = await customSelect(
+          'PRAGMA table_info(historial_pagos_empleados)',
+        ).get();
+        if (!paymentColumns.any(
+          (row) => row.data['name'] == 'periodo_inicio',
+        )) {
+          await m.addColumn(
+            historialPagosEmpleadosTable,
+            historialPagosEmpleadosTable.periodoInicio,
+          );
+        }
+        if (!paymentColumns.any(
+          (row) => row.data['name'] == 'fecha_programada',
+        )) {
+          await m.addColumn(
+            historialPagosEmpleadosTable,
+            historialPagosEmpleadosTable.fechaProgramada,
+          );
+        }
+      }
+      await customStatement(
+        'CREATE UNIQUE INDEX IF NOT EXISTS historial_pagos_empleado_periodo_unique '
+        'ON historial_pagos_empleados (empleado_id, periodo_inicio) '
+        'WHERE periodo_inicio IS NOT NULL',
+      );
       await createSyncSchema(this);
       // Old worker stored raw errors. Do not retain credentials/payload echoes.
       await customStatement(

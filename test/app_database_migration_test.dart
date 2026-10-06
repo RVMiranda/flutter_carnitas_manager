@@ -5,7 +5,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:exquisssita_manager/data/local/database/app_database.dart';
 
 void main() {
-  test('migra una base v1 a v6 sin borrar una tabla legado', () async {
+  test('migra una base v1 a v8 sin borrar una tabla legado', () async {
     final database = AppDatabase(
       executor: NativeDatabase.memory(
         setup: (sqlite) {
@@ -25,7 +25,7 @@ void main() {
         .customSelect("SELECT value FROM legacy_marker WHERE id = 'keep-me'")
         .getSingle();
 
-    expect(database.schemaVersion, 6);
+    expect(database.schemaVersion, 8);
     expect(marker.data['value'], 'preserved');
     expect(
       await database
@@ -37,8 +37,8 @@ void main() {
     );
   });
 
-  for (final version in [2, 3, 4, 5]) {
-    test('migra una base v$version a v6 conservando datos', () async {
+  for (final version in [2, 3, 4, 5, 6, 7]) {
+    test('migra una base v$version a v8 conservando datos', () async {
       final directory = await Directory.systemTemp.createTemp('drift-upgrade-');
       final path = '${directory.path}${Platform.pathSeparator}database.sqlite';
       final databaseFile = File(path);
@@ -63,6 +63,16 @@ void main() {
         raw.execute('DROP INDEX IF EXISTS visitas_usuario_fecha');
         raw.execute('ALTER TABLE clientes DROP COLUMN qr_token_hash');
         raw.execute('ALTER TABLE visitas_clientes DROP COLUMN usuario_id');
+      } else if (version == 7) {
+        raw.execute(
+          'DROP INDEX IF EXISTS historial_pagos_empleado_periodo_unique',
+        );
+        raw.execute(
+          'ALTER TABLE historial_pagos_empleados DROP COLUMN periodo_inicio',
+        );
+        raw.execute(
+          'ALTER TABLE historial_pagos_empleados DROP COLUMN fecha_programada',
+        );
       }
       raw.execute('PRAGMA user_version = $version');
       raw.dispose();
@@ -71,7 +81,7 @@ void main() {
       final client = await (upgraded.select(
         upgraded.clientesTable,
       )..where((table) => table.id.equals('client-1'))).getSingle();
-      expect(upgraded.schemaVersion, 6);
+      expect(upgraded.schemaVersion, 8);
       expect(client.nombre, 'Cliente legado');
       expect(
         await upgraded

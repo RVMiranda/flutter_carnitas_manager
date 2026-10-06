@@ -246,6 +246,8 @@ class HistorialPagosEmpleadosTable extends Table {
   TextColumn get empleadoId => text()();
   IntColumn get montoCentavos => integer()();
   TextColumn get fechaPago => text()();
+  TextColumn get periodoInicio => text().nullable()();
+  TextColumn get fechaProgramada => text().nullable()();
   TextColumn get notas => text().nullable()();
   IntColumn get createdAt => integer()();
   @override

@@ -54,21 +54,24 @@ class EmployeeViewModel extends StateNotifier<EmployeeUiState> {
       await repo.save(draft);
     } catch (e) {
       state = state.copyWith(error: e.toString());
+      rethrow;
     } finally {
       state = state.copyWith(saving: false);
     }
   }
 
-  Future<void> pay(EmpleadosTableData e, DateTime date, String notes) async {
+  Future<void> pay(
+    EmpleadosTableData e,
+    DateTime date,
+    String notes, {
+    required DateTime periodStart,
+  }) async {
     state = state.copyWith(saving: true);
     try {
-      await repo.registerPayment(
-        e.id,
-        date,
-        notes,
-      );
+      await repo.registerPayment(e.id, date, notes, periodStart: periodStart);
     } catch (x) {
       state = state.copyWith(error: x.toString());
+      rethrow;
     } finally {
       state = state.copyWith(saving: false);
     }

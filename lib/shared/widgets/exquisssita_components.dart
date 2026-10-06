@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../../app/theme/exquisssita_tokens.dart';
 import 'exquisssita_pressable.dart';
@@ -288,6 +290,7 @@ class ExquisssitaFormField extends StatelessWidget {
     this.onFieldSubmitted,
     this.suffix,
     this.maxLines = 1,
+    this.showLabel = true,
   });
   final String label;
   final TextEditingController? controller;
@@ -298,6 +301,7 @@ class ExquisssitaFormField extends StatelessWidget {
   final ValueChanged<String>? onFieldSubmitted;
   final Widget? suffix;
   final int maxLines;
+  final bool showLabel;
   @override
   Widget build(BuildContext context) => TextFormField(
     controller: controller,
@@ -311,7 +315,7 @@ class ExquisssitaFormField extends StatelessWidget {
     maxLines: maxLines,
     style: context.exq.body,
     decoration: InputDecoration(
-      labelText: label,
+      labelText: showLabel ? label : null,
       suffixIcon: suffix,
       constraints: BoxConstraints(minHeight: context.exq.metrics.target),
     ),
@@ -324,10 +328,12 @@ class ExquisssitaModal extends StatelessWidget {
     required this.title,
     required this.child,
     this.actions = const [],
+    this.equalActions = false,
   });
   final String title;
   final Widget child;
   final List<Widget> actions;
+  final bool equalActions;
   @override
   Widget build(BuildContext context) => Dialog(
     backgroundColor: context.exq.card,
@@ -335,7 +341,15 @@ class ExquisssitaModal extends StatelessWidget {
       borderRadius: BorderRadius.circular(context.exq.metrics.radiusSheet),
     ),
     child: ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: context.exq.metrics.dialogMax),
+      constraints: BoxConstraints(
+        maxWidth: context.exq.metrics.dialogMax,
+        maxHeight: math.max(
+          context.exq.metrics.target,
+          MediaQuery.sizeOf(context).height -
+              MediaQuery.viewInsetsOf(context).bottom -
+              context.exq.metrics.section,
+        ),
+      ),
       child: SingleChildScrollView(
         padding: EdgeInsets.all(context.exq.metrics.spaceXl),
         child: Column(
@@ -351,12 +365,18 @@ class ExquisssitaModal extends StatelessWidget {
             child,
             if (actions.isNotEmpty) ...[
               SizedBox(height: context.exq.metrics.spaceL),
-              Wrap(
-                alignment: WrapAlignment.end,
-                spacing: context.exq.metrics.spaceS,
-                runSpacing: context.exq.metrics.spaceS,
-                children: actions,
-              ),
+              if (equalActions)
+                Row(
+                  spacing: context.exq.metrics.spaceM,
+                  children: [for (final action in actions) Expanded(child: action)],
+                )
+              else
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: context.exq.metrics.spaceS,
+                  runSpacing: context.exq.metrics.spaceS,
+                  children: actions,
+                ),
             ],
           ],
         ),

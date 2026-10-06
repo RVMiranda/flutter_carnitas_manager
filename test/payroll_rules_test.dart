@@ -8,6 +8,15 @@ void main() {
       expect(PayrollRules.isPayDay(DateTime(2026, 10, 5), 1), isTrue);
       expect(PayrollRules.isPayDay(DateTime(2026, 10, 5), 7), isFalse);
     });
+    test('keeps payment week distinct from actual payment date', () {
+      final week = PayrollWeek.startOf(DateTime(2026, 10, 4));
+      expect(PayrollWeek.dateKey(week), '2026-09-28');
+      expect(PayrollWeek.label(week), 'Semana 1 de octubre de 2026');
+      expect(
+        PayrollWeek.dateKey(PayrollWeek.scheduledDate(week, 3)),
+        '2026-09-30',
+      );
+    });
     test('validates salary and pay day', () {
       expect(PayrollRules.salary('-1'), isNotNull);
       expect(PayrollRules.payDay('0'), isNotNull);

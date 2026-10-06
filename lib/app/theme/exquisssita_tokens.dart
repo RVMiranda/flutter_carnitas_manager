@@ -31,6 +31,7 @@ class ExquisssitaMetrics {
       navMinHeight = 68,
       image = 56;
   final double sheetFraction = .8;
+  final double tableCardAspectRatio = 1.15;
   final double contentMax = 640,
       dialogMax = 560,
       compactWidth = 600,

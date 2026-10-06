@@ -14,22 +14,16 @@ class PromotionsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final promotions = ref.watch(promotionsProvider);
-    final actionVm = ref.read(promotionViewModelProvider.notifier);
+    ref.watch(promotionViewModelProvider);
     final t = context.exq;
     final m = t.metrics;
     return Scaffold(
-      body: Column(
+      body: Stack(
         children: [
-          ExquisssitaPageHeader(
-            title: 'Promociones',
-            action: ExquisssitaAction(
-              label: 'Nueva promoción',
-              icon: Icons.add_outlined,
-              onPressed: () => _openEditor(context, ref),
-            ),
-          ),
-          Expanded(
-            child: promotions.when(
+          Column(
+            children: [
+              const ExquisssitaPageHeader(title: 'Promociones'),
+              Expanded(child: promotions.when(
               loading: () => const ExquisssitaSkeleton(),
               error: (_, _) => ExquisssitaErrorState(
                 onRetry: () => ref.invalidate(promotionsProvider),
@@ -42,7 +36,10 @@ class PromotionsView extends ConsumerWidget {
                       ),
                     )
                   : ListView.separated(
-                      padding: EdgeInsets.all(m.spaceXl),
+                      padding: EdgeInsets.fromLTRB(
+                        m.spaceXl, m.spaceS, m.spaceXl,
+                        m.target + m.section + m.spaceXxl,
+                      ),
                       itemCount: items.length,
                       separatorBuilder: (_, _) => SizedBox(height: m.spaceM),
                       itemBuilder: (context, index) {
@@ -89,15 +86,22 @@ class PromotionsView extends ConsumerWidget {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(item.titulo, style: t.label),
+                                          Text(item.titulo, style: t.text.titleLarge),
                                           Text(item.descripcion, style: t.body),
                                         ],
                                       ),
                                     ),
-                                    Icon(
-                                      Icons.edit_outlined,
-                                      color: t.foreground,
-                                      size: m.iconSmall,
+                                    Container(
+                                      constraints: BoxConstraints(
+                                        minWidth: m.target,
+                                        minHeight: m.target,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        Icons.edit_outlined,
+                                        color: t.primary,
+                                        size: m.iconLarge,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -113,7 +117,9 @@ class PromotionsView extends ConsumerWidget {
                                     : Icons.radio_button_unchecked_outlined,
                                 onPressed: () async {
                                   try {
-                                    await actionVm.setActive(item.id, !item.activo);
+                                    await ref
+                                        .read(promotionViewModelProvider.notifier)
+                                        .setActive(item.id, !item.activo);
                                   } catch (_) {
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(
@@ -134,6 +140,20 @@ class PromotionsView extends ConsumerWidget {
                         );
                       },
                     ),
+              )),
+            ],
+          ),
+          Positioned(
+            left: m.spaceXl,
+            right: m.spaceXl,
+            bottom: m.spaceL,
+            child: Center(
+              child: ExquisssitaAction(
+                key: const ValueKey('new-promotion'),
+                label: 'Nueva promoción',
+                icon: Icons.add_outlined,
+                onPressed: () => _openEditor(context, ref),
+              ),
             ),
           ),
         ],
@@ -146,37 +166,87 @@ class PromotionsView extends ConsumerWidget {
     WidgetRef ref, [
     PromocionesTableData? current,
   ]) async {
-    final title = TextEditingController(text: current?.titulo ?? '');
-    final description = TextEditingController(text: current?.descripcion ?? '');
-    final imageUrl = TextEditingController(text: current?.imagenUrl ?? '');
-    var publishedAt = current == null
-        ? DateTime.now()
-        : DateTime.fromMillisecondsSinceEpoch(current.fechaPublicacion);
-    DateTime? expiresAt = current?.fechaVencimiento == null
-        ? null
-        : DateTime.tryParse(current!.fechaVencimiento!);
-    var active = current?.activo ?? true;
-    var saving = false;
     final saved = await showExquisssitaModal<bool>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => ExquisssitaModal(
-          title: current == null ? 'Nueva promoción' : 'Editar promoción',
+      builder: (_) => _PromotionEditor(current: current, ref: ref),
+    );
+    if (saved == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Promoción guardada localmente.')),
+      );
+    }
+  }
+}
+
+class _PromotionEditor extends StatefulWidget {
+  const _PromotionEditor({required this.current, required this.ref});
+
+  final PromocionesTableData? current;
+  final WidgetRef ref;
+
+  @override
+  State<_PromotionEditor> createState() => _PromotionEditorState();
+}
+
+class _PromotionEditorState extends State<_PromotionEditor> {
+  late final TextEditingController title;
+  late final TextEditingController description;
+  late final TextEditingController imageUrl;
+  late DateTime publishedAt;
+  DateTime? expiresAt;
+  late bool active;
+  bool saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final current = widget.current;
+    title = TextEditingController(text: current?.titulo ?? '');
+    description = TextEditingController(text: current?.descripcion ?? '');
+    imageUrl = TextEditingController(text: current?.imagenUrl ?? '');
+    publishedAt = current == null
+        ? DateTime.now()
+        : DateTime.fromMillisecondsSinceEpoch(current.fechaPublicacion);
+    expiresAt = current?.fechaVencimiento == null
+        ? null
+        : DateTime.tryParse(current!.fechaVencimiento!);
+    active = current?.activo ?? true;
+  }
+
+  @override
+  void dispose() {
+    title.dispose();
+    description.dispose();
+    imageUrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ExquisssitaModal(
+          title: widget.current == null ? 'Nueva promoción' : 'Editar promoción',
+          equalActions: true,
           actions: [
-            ExquisssitaAction(
-              primary: false,
-              label: 'Cancelar',
-              onPressed: () => Navigator.pop(dialogContext, false),
-            ),
-            ExquisssitaAction(
+              SizedBox(
+                height: context.exq.metrics.target + context.exq.metrics.spaceL,
+                child: ExquisssitaAction(
+                key: const ValueKey('cancel-promotion'),
+                primary: false,
+                label: 'Cancelar',
+                onPressed: () => Navigator.pop(context, false),
+              )),
+              SizedBox(
+                height: context.exq.metrics.target + context.exq.metrics.spaceL,
+                child: ExquisssitaAction(
+              key: const ValueKey('save-promotion'),
               label: 'Guardar',
               busy: saving,
               onPressed: () async {
                 if (saving) return;
                 setState(() => saving = true);
+                var saved = false;
                 try {
                   final draft = PromotionDraft(
-                    id: current?.id,
+                    id: widget.current?.id,
                     title: title.text,
                     description: description.text,
                     imageUrl: imageUrl.text.trim().isEmpty
@@ -186,11 +256,12 @@ class PromotionsView extends ConsumerWidget {
                     expiresAt: expiresAt,
                     active: active,
                   );
-                  await ref.read(promotionRepositoryProvider).save(draft);
-                  if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+                  await widget.ref.read(promotionRepositoryProvider).save(draft);
+                  saved = true;
+                  if (context.mounted) Navigator.pop(context, true);
                 } catch (_) {
-                  if (!dialogContext.mounted) return;
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
                         'Revisa título, descripción y fechas. No fue posible guardar la promoción.',
@@ -198,22 +269,24 @@ class PromotionsView extends ConsumerWidget {
                     ),
                   );
                 } finally {
-                  if (dialogContext.mounted) setState(() => saving = false);
+                  if (mounted && !saved) setState(() => saving = false);
                 }
               },
-            ),
+              )),
           ],
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: context.exq.metrics.spaceL,
               children: [
-                ExquisssitaFormField(controller: title, label: 'Título'),
-                ExquisssitaFormField(
+                _PromotionField(controller: title, label: 'Título'),
+                _PromotionField(
                   controller: description,
                   maxLines: 4,
                   label: 'Descripción',
                 ),
-                ExquisssitaFormField(
+                _PromotionField(
                   controller: imageUrl,
                   label: 'URL de imagen (opcional)',
                 ),
@@ -261,16 +334,28 @@ class PromotionsView extends ConsumerWidget {
               ],
             ),
           ),
-        ),
+        );
+}
+
+class _PromotionField extends StatelessWidget {
+  const _PromotionField({required this.controller, required this.label, this.maxLines = 1});
+
+  final TextEditingController controller;
+  final String label;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    spacing: context.exq.metrics.spaceS,
+    children: [
+      Text(label, style: context.exq.text.titleLarge),
+      ExquisssitaFormField(
+        controller: controller,
+        label: label,
+        showLabel: false,
+        maxLines: maxLines,
       ),
-    );
-    title.dispose();
-    description.dispose();
-    imageUrl.dispose();
-    if (saved == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Promoción guardada localmente.')),
-      );
-    }
-  }
+    ],
+  );
 }

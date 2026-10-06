@@ -7882,6 +7882,28 @@ class $HistorialPagosEmpleadosTableTable extends HistorialPagosEmpleadosTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _periodoInicioMeta = const VerificationMeta(
+    'periodoInicio',
+  );
+  @override
+  late final GeneratedColumn<String> periodoInicio = GeneratedColumn<String>(
+    'periodo_inicio',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fechaProgramadaMeta = const VerificationMeta(
+    'fechaProgramada',
+  );
+  @override
+  late final GeneratedColumn<String> fechaProgramada = GeneratedColumn<String>(
+    'fecha_programada',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _notasMeta = const VerificationMeta('notas');
   @override
   late final GeneratedColumn<String> notas = GeneratedColumn<String>(
@@ -7908,6 +7930,8 @@ class $HistorialPagosEmpleadosTableTable extends HistorialPagosEmpleadosTable
     empleadoId,
     montoCentavos,
     fechaPago,
+    periodoInicio,
+    fechaProgramada,
     notas,
     createdAt,
   ];
@@ -7955,6 +7979,24 @@ class $HistorialPagosEmpleadosTableTable extends HistorialPagosEmpleadosTable
     } else if (isInserting) {
       context.missing(_fechaPagoMeta);
     }
+    if (data.containsKey('periodo_inicio')) {
+      context.handle(
+        _periodoInicioMeta,
+        periodoInicio.isAcceptableOrUnknown(
+          data['periodo_inicio']!,
+          _periodoInicioMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fecha_programada')) {
+      context.handle(
+        _fechaProgramadaMeta,
+        fechaProgramada.isAcceptableOrUnknown(
+          data['fecha_programada']!,
+          _fechaProgramadaMeta,
+        ),
+      );
+    }
     if (data.containsKey('notas')) {
       context.handle(
         _notasMeta,
@@ -7997,6 +8039,14 @@ class $HistorialPagosEmpleadosTableTable extends HistorialPagosEmpleadosTable
         DriftSqlType.string,
         data['${effectivePrefix}fecha_pago'],
       )!,
+      periodoInicio: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}periodo_inicio'],
+      ),
+      fechaProgramada: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fecha_programada'],
+      ),
       notas: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notas'],
@@ -8020,6 +8070,8 @@ class HistorialPagosEmpleadosTableData extends DataClass
   final String empleadoId;
   final int montoCentavos;
   final String fechaPago;
+  final String? periodoInicio;
+  final String? fechaProgramada;
   final String? notas;
   final int createdAt;
   const HistorialPagosEmpleadosTableData({
@@ -8027,6 +8079,8 @@ class HistorialPagosEmpleadosTableData extends DataClass
     required this.empleadoId,
     required this.montoCentavos,
     required this.fechaPago,
+    this.periodoInicio,
+    this.fechaProgramada,
     this.notas,
     required this.createdAt,
   });
@@ -8037,6 +8091,12 @@ class HistorialPagosEmpleadosTableData extends DataClass
     map['empleado_id'] = Variable<String>(empleadoId);
     map['monto_centavos'] = Variable<int>(montoCentavos);
     map['fecha_pago'] = Variable<String>(fechaPago);
+    if (!nullToAbsent || periodoInicio != null) {
+      map['periodo_inicio'] = Variable<String>(periodoInicio);
+    }
+    if (!nullToAbsent || fechaProgramada != null) {
+      map['fecha_programada'] = Variable<String>(fechaProgramada);
+    }
     if (!nullToAbsent || notas != null) {
       map['notas'] = Variable<String>(notas);
     }
@@ -8050,6 +8110,12 @@ class HistorialPagosEmpleadosTableData extends DataClass
       empleadoId: Value(empleadoId),
       montoCentavos: Value(montoCentavos),
       fechaPago: Value(fechaPago),
+      periodoInicio: periodoInicio == null && nullToAbsent
+          ? const Value.absent()
+          : Value(periodoInicio),
+      fechaProgramada: fechaProgramada == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fechaProgramada),
       notas: notas == null && nullToAbsent
           ? const Value.absent()
           : Value(notas),
@@ -8067,6 +8133,8 @@ class HistorialPagosEmpleadosTableData extends DataClass
       empleadoId: serializer.fromJson<String>(json['empleadoId']),
       montoCentavos: serializer.fromJson<int>(json['montoCentavos']),
       fechaPago: serializer.fromJson<String>(json['fechaPago']),
+      periodoInicio: serializer.fromJson<String?>(json['periodoInicio']),
+      fechaProgramada: serializer.fromJson<String?>(json['fechaProgramada']),
       notas: serializer.fromJson<String?>(json['notas']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
     );
@@ -8079,6 +8147,8 @@ class HistorialPagosEmpleadosTableData extends DataClass
       'empleadoId': serializer.toJson<String>(empleadoId),
       'montoCentavos': serializer.toJson<int>(montoCentavos),
       'fechaPago': serializer.toJson<String>(fechaPago),
+      'periodoInicio': serializer.toJson<String?>(periodoInicio),
+      'fechaProgramada': serializer.toJson<String?>(fechaProgramada),
       'notas': serializer.toJson<String?>(notas),
       'createdAt': serializer.toJson<int>(createdAt),
     };
@@ -8089,6 +8159,8 @@ class HistorialPagosEmpleadosTableData extends DataClass
     String? empleadoId,
     int? montoCentavos,
     String? fechaPago,
+    Value<String?> periodoInicio = const Value.absent(),
+    Value<String?> fechaProgramada = const Value.absent(),
     Value<String?> notas = const Value.absent(),
     int? createdAt,
   }) => HistorialPagosEmpleadosTableData(
@@ -8096,6 +8168,12 @@ class HistorialPagosEmpleadosTableData extends DataClass
     empleadoId: empleadoId ?? this.empleadoId,
     montoCentavos: montoCentavos ?? this.montoCentavos,
     fechaPago: fechaPago ?? this.fechaPago,
+    periodoInicio: periodoInicio.present
+        ? periodoInicio.value
+        : this.periodoInicio,
+    fechaProgramada: fechaProgramada.present
+        ? fechaProgramada.value
+        : this.fechaProgramada,
     notas: notas.present ? notas.value : this.notas,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -8111,6 +8189,12 @@ class HistorialPagosEmpleadosTableData extends DataClass
           ? data.montoCentavos.value
           : this.montoCentavos,
       fechaPago: data.fechaPago.present ? data.fechaPago.value : this.fechaPago,
+      periodoInicio: data.periodoInicio.present
+          ? data.periodoInicio.value
+          : this.periodoInicio,
+      fechaProgramada: data.fechaProgramada.present
+          ? data.fechaProgramada.value
+          : this.fechaProgramada,
       notas: data.notas.present ? data.notas.value : this.notas,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -8123,6 +8207,8 @@ class HistorialPagosEmpleadosTableData extends DataClass
           ..write('empleadoId: $empleadoId, ')
           ..write('montoCentavos: $montoCentavos, ')
           ..write('fechaPago: $fechaPago, ')
+          ..write('periodoInicio: $periodoInicio, ')
+          ..write('fechaProgramada: $fechaProgramada, ')
           ..write('notas: $notas, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -8130,8 +8216,16 @@ class HistorialPagosEmpleadosTableData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, empleadoId, montoCentavos, fechaPago, notas, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    empleadoId,
+    montoCentavos,
+    fechaPago,
+    periodoInicio,
+    fechaProgramada,
+    notas,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -8140,6 +8234,8 @@ class HistorialPagosEmpleadosTableData extends DataClass
           other.empleadoId == this.empleadoId &&
           other.montoCentavos == this.montoCentavos &&
           other.fechaPago == this.fechaPago &&
+          other.periodoInicio == this.periodoInicio &&
+          other.fechaProgramada == this.fechaProgramada &&
           other.notas == this.notas &&
           other.createdAt == this.createdAt);
 }
@@ -8150,6 +8246,8 @@ class HistorialPagosEmpleadosTableCompanion
   final Value<String> empleadoId;
   final Value<int> montoCentavos;
   final Value<String> fechaPago;
+  final Value<String?> periodoInicio;
+  final Value<String?> fechaProgramada;
   final Value<String?> notas;
   final Value<int> createdAt;
   final Value<int> rowid;
@@ -8158,6 +8256,8 @@ class HistorialPagosEmpleadosTableCompanion
     this.empleadoId = const Value.absent(),
     this.montoCentavos = const Value.absent(),
     this.fechaPago = const Value.absent(),
+    this.periodoInicio = const Value.absent(),
+    this.fechaProgramada = const Value.absent(),
     this.notas = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -8167,6 +8267,8 @@ class HistorialPagosEmpleadosTableCompanion
     required String empleadoId,
     required int montoCentavos,
     required String fechaPago,
+    this.periodoInicio = const Value.absent(),
+    this.fechaProgramada = const Value.absent(),
     this.notas = const Value.absent(),
     required int createdAt,
     this.rowid = const Value.absent(),
@@ -8180,6 +8282,8 @@ class HistorialPagosEmpleadosTableCompanion
     Expression<String>? empleadoId,
     Expression<int>? montoCentavos,
     Expression<String>? fechaPago,
+    Expression<String>? periodoInicio,
+    Expression<String>? fechaProgramada,
     Expression<String>? notas,
     Expression<int>? createdAt,
     Expression<int>? rowid,
@@ -8189,6 +8293,8 @@ class HistorialPagosEmpleadosTableCompanion
       if (empleadoId != null) 'empleado_id': empleadoId,
       if (montoCentavos != null) 'monto_centavos': montoCentavos,
       if (fechaPago != null) 'fecha_pago': fechaPago,
+      if (periodoInicio != null) 'periodo_inicio': periodoInicio,
+      if (fechaProgramada != null) 'fecha_programada': fechaProgramada,
       if (notas != null) 'notas': notas,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -8200,6 +8306,8 @@ class HistorialPagosEmpleadosTableCompanion
     Value<String>? empleadoId,
     Value<int>? montoCentavos,
     Value<String>? fechaPago,
+    Value<String?>? periodoInicio,
+    Value<String?>? fechaProgramada,
     Value<String?>? notas,
     Value<int>? createdAt,
     Value<int>? rowid,
@@ -8209,6 +8317,8 @@ class HistorialPagosEmpleadosTableCompanion
       empleadoId: empleadoId ?? this.empleadoId,
       montoCentavos: montoCentavos ?? this.montoCentavos,
       fechaPago: fechaPago ?? this.fechaPago,
+      periodoInicio: periodoInicio ?? this.periodoInicio,
+      fechaProgramada: fechaProgramada ?? this.fechaProgramada,
       notas: notas ?? this.notas,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -8230,6 +8340,12 @@ class HistorialPagosEmpleadosTableCompanion
     if (fechaPago.present) {
       map['fecha_pago'] = Variable<String>(fechaPago.value);
     }
+    if (periodoInicio.present) {
+      map['periodo_inicio'] = Variable<String>(periodoInicio.value);
+    }
+    if (fechaProgramada.present) {
+      map['fecha_programada'] = Variable<String>(fechaProgramada.value);
+    }
     if (notas.present) {
       map['notas'] = Variable<String>(notas.value);
     }
@@ -8249,6 +8365,8 @@ class HistorialPagosEmpleadosTableCompanion
           ..write('empleadoId: $empleadoId, ')
           ..write('montoCentavos: $montoCentavos, ')
           ..write('fechaPago: $fechaPago, ')
+          ..write('periodoInicio: $periodoInicio, ')
+          ..write('fechaProgramada: $fechaProgramada, ')
           ..write('notas: $notas, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -12349,6 +12467,8 @@ typedef $$HistorialPagosEmpleadosTableTableCreateCompanionBuilder =
       required String empleadoId,
       required int montoCentavos,
       required String fechaPago,
+      Value<String?> periodoInicio,
+      Value<String?> fechaProgramada,
       Value<String?> notas,
       required int createdAt,
       Value<int> rowid,
@@ -12359,6 +12479,8 @@ typedef $$HistorialPagosEmpleadosTableTableUpdateCompanionBuilder =
       Value<String> empleadoId,
       Value<int> montoCentavos,
       Value<String> fechaPago,
+      Value<String?> periodoInicio,
+      Value<String?> fechaProgramada,
       Value<String?> notas,
       Value<int> createdAt,
       Value<int> rowid,
@@ -12390,6 +12512,16 @@ class $$HistorialPagosEmpleadosTableTableFilterComposer
 
   ColumnFilters<String> get fechaPago => $composableBuilder(
     column: $table.fechaPago,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodoInicio => $composableBuilder(
+    column: $table.periodoInicio,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fechaProgramada => $composableBuilder(
+    column: $table.fechaProgramada,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12433,6 +12565,16 @@ class $$HistorialPagosEmpleadosTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get periodoInicio => $composableBuilder(
+    column: $table.periodoInicio,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fechaProgramada => $composableBuilder(
+    column: $table.fechaProgramada,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get notas => $composableBuilder(
     column: $table.notas,
     builder: (column) => ColumnOrderings(column),
@@ -12468,6 +12610,16 @@ class $$HistorialPagosEmpleadosTableTableAnnotationComposer
 
   GeneratedColumn<String> get fechaPago =>
       $composableBuilder(column: $table.fechaPago, builder: (column) => column);
+
+  GeneratedColumn<String> get periodoInicio => $composableBuilder(
+    column: $table.periodoInicio,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fechaProgramada => $composableBuilder(
+    column: $table.fechaProgramada,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get notas =>
       $composableBuilder(column: $table.notas, builder: (column) => column);
@@ -12526,6 +12678,8 @@ class $$HistorialPagosEmpleadosTableTableTableManager
                 Value<String> empleadoId = const Value.absent(),
                 Value<int> montoCentavos = const Value.absent(),
                 Value<String> fechaPago = const Value.absent(),
+                Value<String?> periodoInicio = const Value.absent(),
+                Value<String?> fechaProgramada = const Value.absent(),
                 Value<String?> notas = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -12534,6 +12688,8 @@ class $$HistorialPagosEmpleadosTableTableTableManager
                 empleadoId: empleadoId,
                 montoCentavos: montoCentavos,
                 fechaPago: fechaPago,
+                periodoInicio: periodoInicio,
+                fechaProgramada: fechaProgramada,
                 notas: notas,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -12544,6 +12700,8 @@ class $$HistorialPagosEmpleadosTableTableTableManager
                 required String empleadoId,
                 required int montoCentavos,
                 required String fechaPago,
+                Value<String?> periodoInicio = const Value.absent(),
+                Value<String?> fechaProgramada = const Value.absent(),
                 Value<String?> notas = const Value.absent(),
                 required int createdAt,
                 Value<int> rowid = const Value.absent(),
@@ -12552,6 +12710,8 @@ class $$HistorialPagosEmpleadosTableTableTableManager
                 empleadoId: empleadoId,
                 montoCentavos: montoCentavos,
                 fechaPago: fechaPago,
+                periodoInicio: periodoInicio,
+                fechaProgramada: fechaProgramada,
                 notas: notas,
                 createdAt: createdAt,
                 rowid: rowid,

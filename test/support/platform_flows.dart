@@ -117,7 +117,7 @@ void registerPlatformFlows() {
     await tester.runAsync(() async {
       expect((await db.select(db.ordenesTable).get()).single.estado, 'Abierta');
       expect(
-        (await db.select(db.syncQueueTable).get()).single.status,
+        (await db.select(db.syncQueueTable).get()).first.status,
         'pending',
       );
     });
