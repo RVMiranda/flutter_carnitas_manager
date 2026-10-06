@@ -12,6 +12,16 @@ class InventoryView extends ConsumerStatefulWidget {
 }
 
 class _InventoryViewState extends ConsumerState<InventoryView> {
+  static const _fixedCategories = <String>[
+    'Refrescos',
+    'Jugos',
+    'Aguas N',
+    'Tacos',
+    'Gorditas',
+    'Carne',
+    'Verdura',
+    'Otros',
+  ];
   final _search = TextEditingController();
   @override
   void dispose() {
@@ -26,6 +36,15 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
     final categories = state.products.map((p) => p.categoria).toSet().toList()
       ..sort();
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+        child: ExquisssitaAction(
+          label: 'Nuevo producto',
+          icon: Icons.add,
+          onPressed: () => _editProduct(context, vm),
+        ),
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, c) {
@@ -38,24 +57,14 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1400),
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 104),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Menú e inventario',
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                          ),
-                          ExquisssitaAction(
-                            label: 'Nuevo producto',
-                            icon: Icons.add,
-                            onPressed: () => _editProduct(context, vm),
-                          ),
-                        ],
+                      Text(
+                        'Menú e inventario',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineMedium,
                       ),
                       const SizedBox(height: 20),
                       Wrap(
@@ -63,7 +72,7 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
                         runSpacing: 12,
                         children: [
                           SizedBox(
-                            width: 280,
+                            width: 300,
                             child: Semantics(
                               label: 'Buscar productos',
                               child: TextField(
@@ -76,33 +85,46 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
                               ),
                             ),
                           ),
-                          DropdownButton<String>(
-                            value: state.category,
-                            hint: const Text('Categoría'),
-                            items: [
-                              const DropdownMenuItem(
-                                value: '',
-                                child: Text('Todas las categorías'),
+                          SizedBox(
+                            width: 220,
+                            child: DropdownButtonFormField<String>(
+                              initialValue: state.category,
+                              decoration: const InputDecoration(
+                                labelText: 'Categoría',
+                                helperText: ' ',
                               ),
-                              ...categories.map(
-                                (c) =>
-                                    DropdownMenuItem(value: c, child: Text(c)),
+                              items: [
+                                const DropdownMenuItem<String>(
+                                  child: Text('Todas las categorías'),
+                                ),
+                                ...categories.map(
+                                  (c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text(c),
+                                  ),
+                                ),
+                              ],
+                              onChanged: vm.setCategory,
+                            ),
+                          ),
+                          SegmentedButton<bool?>(
+                            segments: const [
+                              ButtonSegment(
+                                value: true,
+                                label: Text('Controlados'),
+                              ),
+                              ButtonSegment(
+                                value: false,
+                                label: Text('No controlados'),
                               ),
                             ],
-                            onChanged: (v) =>
-                                vm.setCategory(v?.isEmpty == true ? null : v),
-                          ),
-                          FilterChip(
-                            label: const Text('Controlados'),
-                            selected: state.controlled == true,
-                            onSelected: (v) =>
-                                vm.setControlled(v ? true : null),
-                          ),
-                          FilterChip(
-                            label: const Text('No controlados'),
-                            selected: state.controlled == false,
-                            onSelected: (v) =>
-                                vm.setControlled(v ? false : null),
+                            selected: state.controlled == null
+                                ? <bool?>{}
+                                : <bool?>{state.controlled},
+                            emptySelectionAllowed: true,
+                            onSelectionChanged: (values) => vm.setControlled(
+                              values.isEmpty ? null : values.first,
+                            ),
                           ),
                         ],
                       ),
@@ -127,7 +149,7 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
                                   crossAxisCount: columns,
                                   crossAxisSpacing: 16,
                                   mainAxisSpacing: 16,
-                                  childAspectRatio: 1.35,
+                                  childAspectRatio: 1.9,
                                 ),
                             itemCount: state.products.length,
                             itemBuilder: (_, i) => _ProductCard(
@@ -176,63 +198,85 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 28,
+          ),
           title: Text(product == null ? 'Nuevo producto' : 'Editar producto'),
-          content: Form(
-            key: form,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: name,
-                    autofocus: true,
-                    decoration: const InputDecoration(labelText: 'Nombre'),
-                    validator: ProductFormRules.name,
-                  ),
-                  TextFormField(
-                    controller: price,
-                    decoration: const InputDecoration(
-                      labelText: 'Precio en centavos',
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: ProductFormRules.price,
-                  ),
-                  TextFormField(
-                    controller: category,
-                    decoration: const InputDecoration(labelText: 'Categoría'),
-                    validator: ProductFormRules.category,
-                  ),
-                  SwitchListTile(
-                    title: const Text('Controla inventario'),
-                    value: controlled,
-                    onChanged: product == null
-                        ? (v) => setState(() => controlled = v)
-                        : null,
-                  ),
-                  if (controlled && product == null)
+          content: SizedBox(
+            width: 520,
+            child: Form(
+              key: form,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 14,
+                  children: [
                     TextFormField(
-                      controller: initial,
+                      controller: name,
+                      autofocus: true,
+                      decoration: const InputDecoration(labelText: 'Nombre'),
+                      validator: ProductFormRules.name,
+                    ),
+                    TextFormField(
+                      controller: price,
                       decoration: const InputDecoration(
-                        labelText: 'Existencia inicial',
+                        labelText: 'Precio en centavos',
                       ),
                       keyboardType: TextInputType.number,
-                      validator: ProductFormRules.stock,
+                      validator: ProductFormRules.price,
                     ),
-                  if (controlled)
-                    TextFormField(
-                      controller: minimum,
+                    DropdownButtonFormField<String>(
+                      initialValue: _fixedCategories.contains(category.text)
+                          ? category.text
+                          : null,
                       decoration: const InputDecoration(
-                        labelText: 'Stock mínimo',
+                        labelText: 'Categoría',
+                        helperText: ' ',
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: ProductFormRules.stock,
+                      items: _fixedCategories
+                          .map(
+                            (value) => DropdownMenuItem(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) => category.text = value ?? '',
+                      validator: ProductFormRules.category,
                     ),
-                ],
+                    SwitchListTile(
+                      title: const Text('Controla inventario'),
+                      value: controlled,
+                      onChanged: product == null
+                          ? (v) => setState(() => controlled = v)
+                          : null,
+                    ),
+                    if (controlled && product == null)
+                      TextFormField(
+                        controller: initial,
+                        decoration: const InputDecoration(
+                          labelText: 'Existencia inicial',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: ProductFormRules.stock,
+                      ),
+                    if (controlled)
+                      TextFormField(
+                        controller: minimum,
+                        decoration: const InputDecoration(
+                          labelText: 'Stock mínimo',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: ProductFormRules.stock,
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
           actions: [
-            TextButton(
+            OutlinedButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Cancelar'),
             ),

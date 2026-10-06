@@ -88,6 +88,11 @@ class LocalInventoryRepository implements InventoryRepository {
               updatedAt: Value(now),
             ),
           );
+      await (_database.delete(_database.syncQueueTable)..where(
+            (entry) =>
+                entry.entity.equals('productos') & entry.entityId.equals(id),
+          ))
+          .go();
       await _database
           .into(_database.syncQueueTable)
           .insert(
@@ -101,7 +106,9 @@ class LocalInventoryRepository implements InventoryRepository {
               payload: LocalPersistence.encodePayload({
                 'id': id,
                 'nombre': name,
-                'precio_centavos': draft.priceCents,
+                // Remote public.productos uses `precio`; local Drift uses
+                // `precio_centavos` for clarity.
+                'precio': draft.priceCents,
                 'categoria': category,
                 'controla_inventario': draft.tracksInventory,
                 'stock_minimo': draft.minimumStock,
