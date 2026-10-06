@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:exquisssita_manager/shared/widgets/exquisssita_components.dart';
 import 'package:exquisssita_manager/data/local/database/app_database.dart';
+import 'package:exquisssita_manager/core/utils/currency_utils.dart';
 import '../domain/inventory_models.dart';
 import 'inventory_view_model.dart';
 
@@ -185,7 +186,9 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
   ]) async {
     final name = TextEditingController(text: product?.nombre ?? ''),
         price = TextEditingController(
-          text: product == null ? '' : '${product.precioCentavos}',
+          text: product == null
+              ? ''
+              : '${product.precioCentavos ~/ 100}.${(product.precioCentavos % 100).abs().toString().padLeft(2, '0')}',
         ),
         category = TextEditingController(text: product?.categoria ?? ''),
         minimum = TextEditingController(
@@ -194,16 +197,39 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
         initial = TextEditingController(text: '0');
     var controlled = product?.controlaInventario ?? false;
     final form = GlobalKey<FormState>();
-    await showDialog(
+    await showExquisssitaModal(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 28,
-          ),
-          title: Text(product == null ? 'Nuevo producto' : 'Editar producto'),
-          content: SizedBox(
+        builder: (context, setState) => ExquisssitaModal(
+          title: product == null ? 'Nuevo producto' : 'Editar producto',
+          equalActions: true,
+          actions: [
+            OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (!form.currentState!.validate()) return;
+                await vm.save(
+                  ProductDraft(
+                    id: product?.id,
+                    name: name.text,
+                    priceCents: CurrencyUtils.pesosToCentavos(price.text),
+                    category: category.text,
+                    tracksInventory: controlled,
+                    minimumStock: int.parse(minimum.text),
+                    initialStock: int.parse(
+                      initial.text.isEmpty ? '0' : initial.text,
+                    ),
+                  ),
+                );
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+          child: SizedBox(
             width: 520,
             child: Form(
               key: form,
@@ -221,10 +247,15 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
                     TextFormField(
                       controller: price,
                       decoration: const InputDecoration(
-                        labelText: 'Precio en centavos',
+                        labelText: 'Precio',
+                        prefixText: '\$ ',
+                        helperText:
+                            'Captura el precio en pesos. Ejemplo: 35 o 35.50',
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: ProductFormRules.price,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: ProductFormRules.pricePesos,
                     ),
                     DropdownButtonFormField<String>(
                       initialValue: _fixedCategories.contains(category.text)
@@ -275,32 +306,6 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
               ),
             ),
           ),
-          actions: [
-            OutlinedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (!form.currentState!.validate()) return;
-                await vm.save(
-                  ProductDraft(
-                    id: product?.id,
-                    name: name.text,
-                    priceCents: int.parse(price.text),
-                    category: category.text,
-                    tracksInventory: controlled,
-                    minimumStock: int.parse(minimum.text),
-                    initialStock: int.parse(
-                      initial.text.isEmpty ? '0' : initial.text,
-                    ),
-                  ),
-                );
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: const Text('Guardar'),
-            ),
-          ],
         ),
       ),
     );

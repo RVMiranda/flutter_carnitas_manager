@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import '../../../core/utils/currency_utils.dart';
 
 enum InventoryMovementType { entry, sale, adjustment, cancellation, waste }
 
@@ -71,7 +72,10 @@ class ProductDraft {
 enum InventorySyncStatus { synced, pendingSync, rejected, requiresReview }
 
 class InventoryCatalogItem {
-  const InventoryCatalogItem({required this.product, this.syncStatus = InventorySyncStatus.synced});
+  const InventoryCatalogItem({
+    required this.product,
+    this.syncStatus = InventorySyncStatus.synced,
+  });
   final Object product;
   final InventorySyncStatus syncStatus;
 }
@@ -81,16 +85,24 @@ class ProductFormRules {
   static String? name(String? value) => value == null || value.trim().length < 2
       ? 'Escribe un nombre de al menos 2 caracteres.'
       : null;
-  static String? category(String? value) => value == null || value.trim().isEmpty
+  static String? category(String? value) =>
+      value == null || value.trim().isEmpty
       ? 'Selecciona una categoría.'
       : null;
   static String? price(String? value) {
     final parsed = int.tryParse((value ?? '').trim());
     return parsed == null || parsed < 0 ? 'Precio inválido en centavos.' : null;
   }
+
+  static String? pricePesos(String? value) =>
+      value == null || !CurrencyUtils.isValidPesos(value)
+      ? 'Precio inválido.'
+      : null;
   static String? stock(String? value) {
     final parsed = int.tryParse((value ?? '').trim());
-    return parsed == null || parsed < 0 ? 'Usa una cantidad entera no negativa.' : null;
+    return parsed == null || parsed < 0
+        ? 'Usa una cantidad entera no negativa.'
+        : null;
   }
 }
 

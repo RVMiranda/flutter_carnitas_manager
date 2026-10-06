@@ -66,6 +66,35 @@ class CriticalOperationRepository {
     await _event(id, 'rejection_acknowledged_reservation_released');
   });
 
+  Future<void> retryRejectedInventory(String id) => db.transaction(() async {
+    final row = await db
+        .customSelect(
+          "SELECT c.state,c.rejection_known,q.entity FROM critical_operations c JOIN sync_queue q ON q.id=c.operation_id WHERE c.operation_id=?",
+          variables: [Variable(id)],
+        )
+        .getSingleOrNull();
+    if (row == null ||
+        row.read<String>('entity') != 'registrar_movimiento_inventario' ||
+        row.read<String>('state') != 'rejected' ||
+        row.read<int>('rejection_known') != 1) {
+      throw StateError('Esta operación no admite reintento.');
+    }
+    await db.customUpdate(
+      "UPDATE critical_operations SET state='pending_sync',rejection_known=0,acknowledged=0 WHERE operation_id=?",
+      variables: [Variable(id)],
+      updates: {db.syncQueueTable},
+    );
+    await db.customStatement(
+      "UPDATE sync_queue SET status='pending',attempts=0,error_message=NULL WHERE id=?",
+      [id],
+    );
+    await db.customStatement(
+      'UPDATE sync_operation_state SET next_attempt_at=0 WHERE operation_id=?',
+      [id],
+    );
+    await _event(id, 'rejected_inventory_replay_requested');
+  });
+
   /// Unknown outcomes may only replay the original immutable command/key.
   Future<void> retryUnknown(String id) => db.transaction(() async {
     final count = await db.customUpdate(

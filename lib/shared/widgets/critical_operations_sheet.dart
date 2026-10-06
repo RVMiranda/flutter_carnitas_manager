@@ -73,16 +73,25 @@ class CriticalOperationsSheet extends ConsumerWidget {
                                     : ExquisssitaAction(
                                         primary: false,
                                         label: operation.rejectionKnown
-                                            ? 'Atender'
+                                            ? (operation.kind ==
+                                                      'registrar_movimiento_inventario'
+                                                  ? 'Reintentar'
+                                                  : 'Atender')
                                             : 'Consultar',
                                         onPressed: () async {
                                           final known =
                                               operation.rejectionKnown;
+                                          final retryInventory =
+                                              known &&
+                                              operation.kind ==
+                                                  'registrar_movimiento_inventario';
                                           final approved = await showExquisssitaModal<bool>(
                                             context: context,
                                             builder: (context) => ExquisssitaModal(
                                               title: known
-                                                  ? 'Atender rechazo'
+                                                  ? (retryInventory
+                                                        ? 'Reintentar inventario'
+                                                        : 'Atender rechazo')
                                                   : 'Consultar resultado',
                                               actions: [
                                                 ExquisssitaAction(
@@ -97,7 +106,9 @@ class CriticalOperationsSheet extends ConsumerWidget {
                                                 ExquisssitaAction(
                                                   primary: false,
                                                   label: known
-                                                      ? 'Atención realizada'
+                                                      ? (retryInventory
+                                                            ? 'Reintentar'
+                                                            : 'Atención realizada')
                                                       : 'Consultar',
                                                   onPressed: () =>
                                                       Navigator.pop(
@@ -108,7 +119,9 @@ class CriticalOperationsSheet extends ConsumerWidget {
                                               ],
                                               child: Text(
                                                 known
-                                                    ? (payment
+                                                    ? (retryInventory
+                                                          ? 'Se volverá a enviar el mismo movimiento con su identificador original. Hazlo después de confirmar que el producto ya está sincronizado.'
+                                                          : payment
                                                           ? 'Este pago no fue aceptado. Si recibiste dinero, devuelve el importe o registra la incidencia antes de confirmar la atención. Esta acción deja constancia local; no realiza un reembolso bancario.'
                                                           : 'El movimiento no fue aceptado. La reserva local se liberó; verifica la mercancía y registra una nueva corrección si corresponde. El movimiento original se conserva.')
                                                     : 'Se reenviará la misma operación con el mismo identificador. No registres un pago o movimiento nuevo para resolver este caso.',
@@ -121,7 +134,15 @@ class CriticalOperationsSheet extends ConsumerWidget {
                                                 CriticalOperationRepository(
                                                   ref.read(appDatabaseProvider),
                                                 );
-                                            if (known) {
+                                            if (retryInventory) {
+                                              await repository
+                                                  .retryRejectedInventory(
+                                                    operation.id,
+                                                  );
+                                              await ref
+                                                  .read(syncWorkerProvider)
+                                                  .syncNow();
+                                            } else if (known) {
                                               await repository
                                                   .acknowledgeRejection(
                                                     operation.id,

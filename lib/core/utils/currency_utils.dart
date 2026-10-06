@@ -25,6 +25,14 @@ abstract final class CurrencyUtils {
     return cents;
   }
 
+  static bool isValidPesos(String pesos) {
+    try {
+      return pesosToCentavos(pesos) >= 0;
+    } on FormatException {
+      return false;
+    }
+  }
+
   /// Formatea centavos como string de moneda para mostrar al usuario.
   ///
   /// Ejemplo: 2550 → "\$25.50"
